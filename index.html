@@ -1,0 +1,2129 @@
+```html
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HASHGRID — Облачный ASIC-майнинг в Telegram</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'spin-fan': 'spin 1.7s linear infinite',
+                        'spin-fan-rev': 'spin-rev 2.1s linear infinite',
+                        'spin-fan-turbo': 'spin 0.42s linear infinite',
+                        'spin-fan-turbo-rev': 'spin-rev 0.52s linear infinite',
+                        'spin-orbit': 'spin 16s linear infinite',
+                        'spin-orbit-rev': 'spin-rev 22s linear infinite',
+                        'float-box': 'float 3.2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        'spin-rev': {
+                            '0%': { transform: 'rotate(360deg)' },
+                            '100%': { transform: 'rotate(0deg)' },
+                        },
+                        'float': {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-6px)' },
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        body {
+            background-color: #05070C;
+            color: #F8FAFC;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 15% 0%, rgba(245, 158, 11, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 85% 6%, rgba(16, 185, 129, 0.12) 0%, transparent 44%),
+                radial-gradient(circle at 50% 100%, rgba(251, 191, 36, 0.08) 0%, transparent 52%),
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+        }
+
+        .glass-header {
+            background: rgba(6, 9, 16, 0.93);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .obsidian-panel {
+            background: linear-gradient(165deg, rgba(16, 22, 34, 0.96) 0%, rgba(8, 11, 18, 0.99) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 40px -15px rgba(0, 0, 0, 0.8);
+        }
+
+        .rig-card-t1 {
+            background: radial-gradient(circle at 50% 35%, rgba(245, 158, 11, 0.16) 0%, rgba(11, 14, 22, 0.98) 72%);
+            border: 1px solid rgba(245, 158, 11, 0.42);
+            box-shadow: inset 0 1px 0 rgba(251, 191, 36, 0.15), 0 22px 48px -14px rgba(245, 158, 11, 0.25);
+        }
+
+        .rig-card-t2 {
+            background: radial-gradient(circle at 50% 35%, rgba(16, 185, 129, 0.18) 0%, rgba(8, 15, 18, 0.98) 72%);
+            border: 1px solid rgba(16, 185, 129, 0.48);
+            box-shadow: inset 0 1px 0 rgba(52, 211, 153, 0.16), 0 22px 48px -14px rgba(16, 185, 129, 0.28);
+        }
+
+        .rig-card-t3 {
+            background: radial-gradient(circle at 50% 35%, rgba(251, 191, 36, 0.28) 0%, rgba(15, 11, 8, 0.99) 74%);
+            border: 1.5px solid rgba(251, 191, 36, 0.82);
+            box-shadow: inset 0 0 42px rgba(251, 191, 36, 0.16), 0 28px 64px -12px rgba(245, 158, 11, 0.5);
+        }
+
+        .battery-shell {
+            background: linear-gradient(180deg, #111622 0%, #070A10 100%);
+            border: 1.5px solid rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8), 0 8px 20px rgba(0, 0, 0, 0.45);
+            transition: all 0.25s ease;
+        }
+
+        .battery-shell-active {
+            border-color: rgba(52, 211, 153, 0.78);
+            box-shadow: inset 0 0 16px rgba(16, 185, 129, 0.22), 0 0 22px rgba(16, 185, 129, 0.26);
+        }
+
+        .battery-shell-low {
+            border-color: rgba(245, 158, 11, 0.7);
+            box-shadow: inset 0 0 14px rgba(245, 158, 11, 0.18), 0 0 18px rgba(245, 158, 11, 0.2);
+        }
+
+        .battery-cap {
+            background: linear-gradient(90deg, #64748B 0%, #E2E8F0 45%, #94A3B8 75%, #475569 100%);
+            border-radius: 5px 5px 1px 1px;
+            box-shadow: 0 -1px 3px rgba(255, 255, 255, 0.25);
+        }
+
+        .battery-green-fill {
+            background: linear-gradient(180deg, #4ADE80 0%, #22C55E 48%, #15803D 100%);
+            box-shadow: 0 0 14px rgba(34, 197, 94, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.45);
+        }
+
+        .battery-amber-fill {
+            background: linear-gradient(180deg, #FBBF24 0%, #F59E0B 55%, #B45309 100%);
+            box-shadow: 0 0 14px rgba(245, 158, 11, 0.45), inset 0 1px 2px rgba(255, 255, 255, 0.45);
+        }
+
+        .gold-btn {
+            background: linear-gradient(135deg, #FDE047 0%, #F59E0B 55%, #D97706 100%);
+            color: #090D16;
+            box-shadow: 0 8px 24px -4px rgba(245, 158, 11, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .gold-btn:hover:not(:disabled) {
+            filter: brightness(1.06);
+            transform: translateY(-1px);
+        }
+
+        .brand-logo-text {
+            background: linear-gradient(90deg, #FFFFFF 0%, #FDE68A 42%, #F59E0B 72%, #34D399 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .mystery-gift-card {
+            background: radial-gradient(circle at 50% 30%, rgba(251, 191, 36, 0.25) 0%, rgba(12, 15, 24, 0.98) 72%);
+            border: 1.5px solid rgba(251, 191, 36, 0.55);
+            box-shadow: 0 18px 44px -12px rgba(245, 158, 11, 0.38);
+        }
+
+        .fan-rotor {
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+
+        @keyframes giftPop {
+            0% { transform: scale(1) rotate(0deg); }
+            35% { transform: scale(1.22) rotate(-7deg); }
+            70% { transform: scale(1.26) rotate(7deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        .gift-pop-anim {
+            animation: giftPop 0.55s ease-out;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #05070C; }
+        ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 9999px; }
+    </style>
+</head>
+<body class="antialiased selection:bg-amber-400 selection:text-slate-950 min-h-screen flex flex-col">
+
+    <!-- Уведомления (Toast) -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full px-4 sm:px-0 pointer-events-none"></div>
+
+    <!-- ===================================================================== -->
+    <!-- 1. ШАПКА: ЛОГОТИП HASHGRID, PRO, РЕАКТОР СПРАВА, 2 БАЛАНСА И МОНЕТЫ   -->
+    <!-- ===================================================================== -->
+    <header class="sticky top-0 z-40 glass-header">
+        <div class="max-w-5xl mx-auto px-3 sm:px-4 py-2.5 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+                <!-- Логотип HASHGRID слева -->
+                <button type="button" data-action="switch-tab" data-tab="terminal" class="flex items-center gap-2.5 group text-left focus:outline-none">
+                    <div class="relative w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
+                        <div class="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-400/25 via-emerald-500/15 to-amber-500/25 border border-amber-400/45 group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-amber-500/15"></div>
+                        <svg class="relative z-10 w-7 h-7 sm:w-8 sm:h-8" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="hgHexGrad" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#FDE047"/>
+                                    <stop offset="50%" stop-color="#F59E0B"/>
+                                    <stop offset="100%" stop-color="#34D399"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M20 3.5L34.3 11.75V28.25L20 36.5L5.7 28.25V11.75L20 3.5Z" stroke="url(#hgHexGrad)" stroke-width="2.3" fill="#070A12"/>
+                            <path d="M14.5 14V26M25.5 14V26M11.5 17.5H28.5M11.5 22.5H28.5" stroke="url(#hgHexGrad)" stroke-width="2.1" stroke-linecap="round"/>
+                            <circle cx="20" cy="20" r="2.6" fill="#34D399"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-black text-lg sm:text-2xl tracking-[0.07em] uppercase brand-logo-text leading-none">HASHGRID</span>
+                            <span class="inline-flex items-center gap-1 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-300 border border-amber-400/35">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                PRO
+                            </span>
+                        </div>
+                        <div class="text-[10px] font-mono text-slate-400 mt-0.5 hidden sm:block">Telegram Mini App • Non-Custodial Sim</div>
+                    </div>
+                </button>
+
+                <!-- Правая группа: 2 баланса (SHOP USD + MINING BTC) + светящийся реактор -->
+                <div class="flex items-center gap-2">
+                    <div class="hidden md:flex items-center gap-2">
+                        <button type="button" data-action="open-topup-modal" title="Пополнить баланс покупок SHOP USD" class="px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/40 transition text-left">
+                            <div class="text-[9px] font-mono uppercase text-amber-300 leading-none">SHOP USD (ПОКУПКИ)</div>
+                            <div class="flex items-baseline gap-1.5 mt-1">
+                                <span id="header-shop-usd-desk" class="font-mono font-extrabold text-sm text-white">$10.00</span>
+                                <span class="text-[9px] font-mono text-amber-300/80">+ Пополнить</span>
+                            </div>
+                        </button>
+                        <button type="button" data-action="switch-tab" data-tab="partners" title="Намайненный баланс MINING BTC" class="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/40 transition text-left">
+                            <div class="text-[9px] font-mono uppercase text-emerald-300 leading-none">MINING BTC</div>
+                            <div class="flex items-baseline gap-1.5 mt-1">
+                                <span id="header-mining-btc-desk" class="font-mono font-extrabold text-sm text-emerald-300">0.00001200 BTC</span>
+                                <span id="header-mining-usd-desk" class="text-[10px] font-mono text-slate-400">~$0.75</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Светящаяся круглая эмблема-реактор HASHGRID справа -->
+                    <button type="button" data-action="open-admin-modal" title="Кабинет администратора (задания, заявки, тесты)" class="relative w-11 h-11 rounded-full bg-gradient-to-br from-amber-400/25 via-[#0B101B] to-emerald-400/25 border border-amber-400/55 flex items-center justify-center shadow-[0_0_24px_rgba(245,158,11,0.3)] hover:scale-105 transition-transform shrink-0">
+                        <svg class="w-9 h-9" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="22" cy="22" r="19" stroke="#F59E0B" stroke-opacity="0.5" stroke-width="1.3" stroke-dasharray="6 4" class="animate-spin-orbit" style="transform-box: fill-box; transform-origin: center;"/>
+                            <circle cx="22" cy="22" r="14.5" fill="#070A12" stroke="#34D399" stroke-opacity="0.75" stroke-width="1.4"/>
+                            <path d="M22 10L32.4 16V28L22 34L11.6 28V16L22 10Z" stroke="#FBBF24" stroke-width="1.5" fill="none"/>
+                            <path d="M18.5 16.5V27.5M25.5 16.5V27.5M16 19.5H28M16 24.5H28" stroke="#FDE047" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <span class="absolute -bottom-0.5 -right-0.5 px-1 rounded bg-emerald-500 text-[7px] font-mono font-black text-slate-950 border border-[#060911]">ADM</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Мобильные балансы (< md) -->
+            <div class="grid grid-cols-2 gap-2 md:hidden">
+                <button type="button" data-action="open-topup-modal" class="px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/40 transition text-left">
+                    <div class="text-[9px] font-mono uppercase text-amber-300 leading-none">SHOP USD • +ПОПОЛНИТЬ</div>
+                    <div class="font-mono font-extrabold text-xs text-white mt-1" id="header-shop-usd-mob">$10.00</div>
+                </button>
+                <button type="button" data-action="switch-tab" data-tab="partners" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/40 transition text-left">
+                    <div class="text-[9px] font-mono uppercase text-emerald-300 leading-none">MINING BTC</div>
+                    <div class="flex items-baseline gap-1 mt-1 truncate">
+                        <span id="header-mining-btc-mob" class="font-mono font-extrabold text-xs text-emerald-300 truncate">0.00001200</span>
+                        <span id="header-mining-usd-mob" class="text-[9.5px] font-mono text-slate-400 shrink-0">~$0.75</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Карточки выбора криптовалюты (BTC, LTC, DOGE, TON) с векторными логотипами -->
+            <div class="pt-1.5 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 shrink-0">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span>Валюта майнинга:</span>
+                </div>
+                <div id="top-coin-selector" class="grid grid-cols-4 gap-1.5 w-full sm:w-auto sm:flex-1 sm:max-w-xl"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- НАВИГАЦИЯ ПО 4 ОСНОВНЫМ РАЗДЕЛАМ + КНОПКА АДМИНА -->
+    <div class="max-w-5xl mx-auto w-full px-3 sm:px-4 pt-3.5 space-y-2">
+        <nav class="grid grid-cols-4 gap-1.5 p-1.5 rounded-2xl obsidian-panel">
+            <button type="button" data-action="switch-tab" data-tab="terminal" id="tab-terminal" class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 gold-btn transition-all">
+                <span>⚡</span>
+                <span>Терминал</span>
+            </button>
+            <button type="button" data-action="switch-tab" data-tab="fleet" id="tab-fleet" class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 text-slate-400 hover:text-white transition-all">
+                <span>🖥️</span>
+                <span>ASIC Ферма</span>
+            </button>
+            <button type="button" data-action="switch-tab" data-tab="rewards" id="tab-rewards" class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 text-slate-400 hover:text-white transition-all relative">
+                <span>🎁</span>
+                <span>Награды</span>
+                <span id="rewards-dot" class="w-2 h-2 rounded-full bg-amber-400 absolute top-2 right-2"></span>
+            </button>
+            <button type="button" data-action="switch-tab" data-tab="partners" id="tab-partners" class="py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 text-slate-400 hover:text-white transition-all">
+                <span>👥</span>
+                <span>Друзья и вывод</span>
+            </button>
+        </nav>
+
+        <!-- Быстрая строка доступа в кабинет админа -->
+        <div class="flex items-center justify-between px-3 py-1.5 rounded-xl bg-white/[0.02] border border-white/5 text-[11px]">
+            <div class="text-slate-400 truncate">
+                <span class="text-emerald-400 font-mono">●</span> Баланс майнинга нельзя тратить на покупку ASIC • Вывод от <strong class="text-white">3 активных друзей</strong> и <strong class="text-amber-300">Tier 2+</strong>
+            </div>
+            <button type="button" data-action="open-admin-modal" class="text-amber-300 hover:text-amber-200 font-mono font-bold shrink-0 ml-2 underline decoration-amber-400/40">
+                🛡️ Кабинет админа
+            </button>
+        </div>
+    </div>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <main class="max-w-5xl mx-auto w-full px-3 sm:px-4 py-4 flex-1 space-y-5">
+
+        <!-- ================================================================= -->
+        <!-- 1. ТЕРМИНАЛ: 3D ASIC + СЧЁТЧИК BTC + БАТАРЕИ 3x2 + 12ч ЗАДАНИЯ   -->
+        <!-- ================================================================= -->
+        <section id="view-terminal" class="space-y-5">
+
+            <!-- Баннер активного буста -->
+            <div id="boost-banner" class="hidden rounded-2xl bg-gradient-to-r from-amber-500/20 via-emerald-500/15 to-amber-500/20 border border-amber-400/45 px-4 py-3 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-xl animate-bounce">⚡</span>
+                    <div>
+                        <div id="boost-banner-title" class="text-xs sm:text-sm font-extrabold text-amber-300">БУСТ МОЩНОСТИ +10% АКТИВЕН</div>
+                        <div class="text-[11px] text-slate-300">Турбины ASIC работают в режиме разгона</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] font-mono uppercase text-amber-200/80">Осталось</div>
+                    <div id="boost-banner-timer" class="font-mono font-extrabold text-sm sm:text-base text-white">01:59:59</div>
+                </div>
+            </div>
+
+            <!-- Витрина активного 3D ASIC -->
+            <div id="terminal-rig-stage" class="rounded-3xl p-5 sm:p-7 relative overflow-hidden transition-all duration-500 rig-card-t1">
+                <div id="terminal-rig-inner"></div>
+            </div>
+
+            <!-- Живой счётчик добычи и прогресс до порога -->
+            <div class="obsidian-panel rounded-3xl p-5 sm:p-7 relative overflow-hidden">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3.5 border-b border-white/10">
+                    <div class="flex items-center gap-2">
+                        <span id="live-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span class="text-xs font-mono uppercase tracking-wider text-slate-300">
+                            Майнинг <strong id="term-coin-name" class="text-white">Bitcoin</strong>
+                        </span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
+                        <span class="text-emerald-400">Скорость: <strong id="term-coin-rate">+0.00000000 / сек</strong></span>
+                        <span id="term-efficiency-pill" class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-400/30">КПД 95%</span>
+                    </div>
+                </div>
+
+                <div class="my-5 text-center">
+                    <div id="term-live-amount" class="font-mono font-black text-3xl sm:text-5xl lg:text-6xl tracking-tight text-white">
+                        0.00001200
+                    </div>
+                    <div class="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm font-mono">
+                        <span id="term-coin-ticker" class="font-extrabold text-amber-400">BTC</span>
+                        <span class="text-slate-600">•</span>
+                        <span class="text-slate-400">Оценка: <strong id="term-live-usd" class="text-emerald-300">~$0.75</strong></span>
+                        <span class="text-slate-600">•</span>
+                        <span class="text-emerald-300">Рефералы (10%): <strong id="term-ref-bonus-label">+0 TH/s</strong></span>
+                    </div>
+                </div>
+
+                <!-- Шкала прогресса до порога выбранного уровня / монеты -->
+                <div class="max-w-2xl mx-auto bg-[#060911] p-4 rounded-2xl border border-white/10">
+                    <div class="flex items-center justify-between text-xs mb-2 gap-2">
+                        <span id="term-goal-title" class="text-slate-400">Порог вывода для текущего уровня:</span>
+                        <span class="font-mono font-bold text-white">
+                            <span id="term-prog-cur">0.00001200</span> / <span id="term-prog-target">0.00016000</span> <span id="term-prog-ticker">BTC</span>
+                        </span>
+                    </div>
+                    <div class="w-full h-3 rounded-full bg-slate-800 overflow-hidden p-0.5">
+                        <div id="term-prog-bar" class="h-full rounded-full bg-gradient-to-r from-amber-400 via-yellow-300 to-emerald-400 transition-all duration-300" style="width: 7.5%"></div>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-between gap-2 mt-2.5 text-[11px] font-mono">
+                        <span id="term-prog-pct" class="text-slate-400">Прогресс: 7.5%</span>
+                        <button type="button" data-action="switch-tab" data-tab="partners" class="text-amber-300 hover:underline font-semibold">
+                            Условия вывода (Tier 2+ и 3 друга) →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Кнопки управления -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto mt-4">
+                    <button type="button" id="toggle-mining-btn" data-action="toggle-mining" class="py-3.5 px-5 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 font-extrabold text-sm transition-all flex items-center justify-center gap-2">
+                        <span>⏸️ Остановить майнинг</span>
+                    </button>
+                    <button type="button" data-action="switch-tab" data-tab="rewards" class="py-3.5 px-5 rounded-2xl gold-btn font-black text-sm transition-all flex items-center justify-center gap-2">
+                        <span>🎁 Ежедневный приз и буст +10%</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Сетка 3x2 из 6 вертикальных батарей Power Cells -->
+            <div class="obsidian-panel rounded-3xl p-5 sm:p-7 border border-emerald-400/25 space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl bg-amber-400/15 border border-amber-400/40 flex items-center justify-center text-xl shadow-inner">
+                            ⚡
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-lg sm:text-xl font-black text-white">Power Cells</h3>
+                                <span id="power-ready-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                                    READY
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400">6 батарейных блоков • <span id="power-cells-sub" class="font-mono text-slate-300">95/100 ячеек заряжено • 1 ячейка = 1% мощности</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="power-cells-6-grid" class="grid grid-cols-3 gap-2.5 sm:gap-4 max-w-2xl mx-auto"></div>
+
+                <div class="max-w-2xl mx-auto rounded-2xl bg-[#060911] border border-amber-400/25 p-4 sm:p-5 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-300">Заряд батареи майнинга</span>
+                                <span class="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-mono text-emerald-300">LIVE STATUS</span>
+                            </div>
+                            <div class="flex items-baseline gap-3 mt-1">
+                                <span id="power-big-percent" class="font-mono font-black text-4xl sm:text-5xl text-amber-300">95%</span>
+                                <div id="power-warning-text" class="text-[11px] leading-snug text-amber-200/90">
+                                    <div>● Рекомендуется подзарядка батареи</div>
+                                    <div class="text-slate-400">Держите заряд выше 98% для максимальной стабильности</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-white/[0.03] border border-white/10 text-[11px] font-mono space-y-1 shrink-0">
+                            <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">POWER GUIDE</div>
+                            <div class="flex items-center gap-1.5 text-rose-400"><span>●</span><span>Минимум 90%</span></div>
+                            <div class="flex items-center gap-1.5 text-amber-300"><span>●</span><span>Рекомендуемо 98%</span></div>
+                            <div class="flex items-center gap-1.5 text-emerald-400"><span>●</span><span>Оптимально 100%</span></div>
+                        </div>
+                    </div>
+
+                    <button type="button" data-action="recharge-battery" data-amount="5" class="w-full py-3.5 px-5 rounded-xl gold-btn font-black text-sm flex items-center justify-center gap-2 transition">
+                        <span>⚡ Подзарядить +5%</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 12-часовые задания Telegram & TikTok прямо в Терминале (динамически из состояния) -->
+            <div class="obsidian-panel rounded-3xl p-5 sm:p-6 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-white/10">
+                    <div>
+                        <span class="text-[11px] font-mono uppercase text-emerald-300">Задания каждые 12 часов • Telegram &amp; TikTok</span>
+                        <h3 class="text-lg sm:text-xl font-black text-white mt-0.5">Буст +10% к мощности ASIC на 2 часа</h3>
+                    </div>
+                    <div class="text-xs font-mono text-slate-400">
+                        Цикл обновится через: <strong id="term-tasks-timer" class="text-amber-300">11:59:59</strong>
+                    </div>
+                </div>
+                <div id="terminal-tasks-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3.5"></div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 2. ASIC ФЕРМА: TIER 1 (FREE), TIER 2 ($10), TIER 3 ($99)          -->
+        <!-- ================================================================= -->
+        <section id="view-fleet" class="hidden space-y-5">
+            <div class="obsidian-panel rounded-3xl p-5 sm:p-6 border border-amber-400/35 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <span class="text-[11px] font-mono uppercase tracking-wider text-amber-300">Upgrade Mining Fleet</span>
+                    <h2 class="text-2xl font-black text-white mt-0.5">Магазин ASIC-установок</h2>
+                    <p class="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
+                        Покупка ASIC идёт только со счёта <strong>SHOP USD</strong>. Намайненный баланс <strong>нельзя</strong> потратить на покупку ASIC — это защищает экономику симулятора.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:items-end gap-2 shrink-0">
+                    <div class="px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-400/40 text-xs font-mono">
+                        SHOP USD: <strong id="fleet-shop-usd" class="text-amber-300">$10.00</strong>
+                    </div>
+                    <button type="button" data-action="open-topup-modal" class="px-4 py-2 rounded-xl gold-btn font-extrabold text-xs transition">
+                        + Пополнить SHOP USD
+                    </button>
+                </div>
+            </div>
+
+            <div id="fleet-cards-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-5"></div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 3. НАГРАДЫ: 7-ДНЕВНЫЙ СТРИК С УДВОЕНИЕМ BTC + 12Ч ЗАДАНИЯ          -->
+        <!-- ================================================================= -->
+        <section id="view-rewards" class="hidden space-y-5">
+            <div class="mystery-gift-card rounded-3xl p-5 sm:p-7 relative overflow-hidden">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div class="space-y-2 max-w-xl">
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/15 border border-amber-400/40 text-amber-300 text-[11px] font-mono uppercase">
+                            <span>🎁 7-Day Doubling BTC Streak</span>
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-black text-white">Ежедневные призы с удвоением до 7 дня</h2>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            Заходите каждый день подряд и забирайте награду в <strong>BTC</strong>: от <strong>0.0000001 BTC</strong> в 1-й день с удвоением каждый день до <strong>0.0000064 BTC</strong> на 7-й день (всего <strong>0.0000127 BTC</strong> за неделю). При пропуске дня стрик сбрасывается на День 1.
+                        </p>
+                    </div>
+
+                    <!-- Кликабельный золотой бокс и кнопка -->
+                    <div id="daily-gift-box-card" data-action="claim-daily-gift" class="cursor-pointer group flex flex-col items-center justify-center bg-black/60 hover:bg-black/75 p-5 rounded-3xl border border-amber-400/45 shrink-0 min-w-[250px] transition-all">
+                        <div id="daily-gift-svg-wrap" class="w-24 h-24 animate-float-box group-hover:scale-105 transition-transform flex items-center justify-center mb-2">
+                            <svg class="w-24 h-24 drop-shadow-[0_10px_22px_rgba(245,158,11,0.55)]" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="boxBody" x1="20" y1="45" x2="100" y2="108" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#27272A"/>
+                                        <stop offset="50%" stop-color="#18181B"/>
+                                        <stop offset="100%" stop-color="#09090B"/>
+                                    </linearGradient>
+                                    <linearGradient id="goldRibbon" x1="20" y1="20" x2="100" y2="108" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#FEF08A"/>
+                                        <stop offset="50%" stop-color="#F59E0B"/>
+                                        <stop offset="100%" stop-color="#B45309"/>
+                                    </linearGradient>
+                                </defs>
+                                <circle cx="60" cy="62" r="46" fill="url(#goldRibbon)" fill-opacity="0.16"/>
+                                <rect x="24" y="48" width="72" height="56" rx="10" fill="url(#boxBody)" stroke="url(#goldRibbon)" stroke-width="2.5"/>
+                                <rect x="19" y="36" width="82" height="16" rx="6" fill="url(#boxBody)" stroke="url(#goldRibbon)" stroke-width="2.5"/>
+                                <rect x="53" y="36" width="14" height="68" fill="url(#goldRibbon)"/>
+                                <rect x="24" y="70" width="72" height="11" fill="url(#goldRibbon)" fill-opacity="0.85"/>
+                                <path d="M60 36C48 20 30 22 34 34C37 41 51 38 60 36Z" fill="url(#goldRibbon)"/>
+                                <path d="M60 36C72 20 90 22 86 34C83 41 69 38 60 36Z" fill="url(#goldRibbon)"/>
+                                <circle cx="60" cy="36" r="5" fill="#FEF08A"/>
+                            </svg>
+                        </div>
+                        <div id="daily-gift-status-label" class="text-xs font-mono text-amber-200 mb-2.5 text-center">День <span id="daily-streak-num">1</span> из 7 • +0.0000001 BTC</div>
+                        <button type="button" id="claim-daily-gift-btn" data-action="claim-daily-gift" class="w-full py-3 px-4 rounded-xl gold-btn font-black text-xs sm:text-sm transition">
+                            Открыть подарок 🎁
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 7 дней стрика -->
+                <div id="daily-streak-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mt-6"></div>
+            </div>
+
+            <!-- 12-часовые задания в разделе Награды -->
+            <div class="obsidian-panel rounded-3xl p-5 sm:p-6 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-white/10">
+                    <div>
+                        <span class="text-[11px] font-mono uppercase text-emerald-300">Цикл 12 часов • Telegram &amp; TikTok</span>
+                        <h3 class="text-xl font-black text-white mt-0.5">Задания на разгон ASIC (+10% на 2 часа)</h3>
+                    </div>
+                    <div class="text-xs font-mono text-slate-400">
+                        Обновление через: <strong id="rewards-tasks-timer" class="text-amber-300">11:59:59</strong>
+                    </div>
+                </div>
+                <div id="rewards-tasks-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 4. ДРУЗЬЯ И ВЫВОД: +10% ОТ РЕФЕРАЛОВ, ЧЕК-ЛИСТ 3/3 + TIER 2+ + ПОРОГ -->
+        <!-- ================================================================= -->
+        <section id="view-partners" class="hidden space-y-5">
+            <div class="obsidian-panel rounded-3xl p-5 sm:p-6 border border-emerald-400/30 space-y-5">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 text-[11px] font-mono">
+                            <span>🤝 Реферальная сеть HASHGRID • +10%</span>
+                        </div>
+                        <h2 class="text-2xl font-black text-white mt-1">10% от майнинга друзей и условие 3 активных рефералов</h2>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
+                            Приглашайте друзей через Telegram: каждый активный друг даёт вам <strong>+10% от своего майнинга</strong> сверху и приближает открытие вывода (требуется минимум <strong>3 активных друга</strong>).
+                        </p>
+                    </div>
+                    <div class="bg-[#060911] p-4 rounded-2xl border border-emerald-400/35 shrink-0">
+                        <div class="text-[10px] font-mono text-slate-400">Начислено от друзей (10%)</div>
+                        <div id="ref-passive-btc" class="font-mono font-black text-lg text-emerald-300 mt-0.5">+0.00000000 BTC</div>
+                        <div id="ref-total-th-display" class="text-[11px] font-mono text-amber-300 mt-0.5">Бонус: +0 TH/s</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-[#060911] p-3.5 rounded-2xl border border-white/10">
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[10px] font-mono text-slate-400">Ваша ссылка приглашения:</div>
+                        <input id="ref-link-input" type="text" readonly value="https://t.me/hashgrid_bot?start=ref_HG7021" class="w-full bg-transparent font-mono text-xs sm:text-sm text-amber-300 font-bold focus:outline-none truncate mt-0.5">
+                    </div>
+                    <button type="button" data-action="copy-ref-link" class="px-4 py-2.5 rounded-xl gold-btn font-black text-xs transition shrink-0">
+                        📋 Копировать ссылку
+                    </button>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between text-xs mb-2.5">
+                        <span class="font-bold text-slate-300">Активные друзья: <span id="ref-count-inline" class="text-emerald-300 font-mono">0 / 3</span></span>
+                        <span class="text-[11px] font-mono text-slate-400">Бонус: +10% от добычи</span>
+                    </div>
+                    <div id="referrals-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+                </div>
+            </div>
+
+            <!-- Чек-лист вывода и форма заявки -->
+            <div class="obsidian-panel rounded-3xl p-5 sm:p-6 border border-amber-400/35 space-y-5">
+                <div>
+                    <span class="text-[11px] font-mono uppercase text-amber-300">Проверка условий выплаты</span>
+                    <h3 class="text-xl font-black text-white mt-0.5">Чек-лист и вывод средств</h3>
+                    <p class="text-xs text-slate-400 mt-1">
+                        На бесплатном <strong>Nano S1 ($0)</strong> вывод закрыт. Для вывода требуется: уровень <strong>ASIC Tier 2+</strong>, минимум <strong>3 активных друга</strong> и достижение порога (<strong>0.00016 BTC / ~$10</strong> для Tier 2 либо <strong>0.0016 BTC / ~$100</strong> для Tier 3). Выплаты обрабатываются вручную в кабинете админа без хранения средств на сайте.
+                    </p>
+                </div>
+
+                <div id="withdrawal-rules-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3.5"></div>
+
+                <div class="p-4 sm:p-5 rounded-2xl bg-[#060911] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <div class="text-xs text-slate-400">Доступно для заявки на вывод:</div>
+                        <div id="withdraw-summary-amount" class="font-mono font-black text-xl sm:text-2xl text-white mt-0.5">
+                            0.00001200 BTC (~$0.75)
+                        </div>
+                        <div id="withdraw-lock-hint" class="text-[11px] text-amber-300 mt-1">
+                            Выполните все 3 условия выше, чтобы открыть форму вывода.
+                        </div>
+                    </div>
+
+                    <button type="button" id="withdraw-action-btn" data-action="open-withdraw-modal" disabled class="px-6 py-4 rounded-2xl gold-btn disabled:bg-none disabled:bg-slate-800 disabled:text-slate-500 disabled:shadow-none font-black text-sm transition shrink-0">
+                        Оформить вывод
+                    </button>
+                </div>
+
+                <!-- Очередь отправленных заявок (внутренний лог симулятора) -->
+                <div id="withdraw-requests-log" class="space-y-2"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ===================================================================== -->
+    <!-- КОМПАКТНАЯ НИЖНЯЯ СТРОКА ТЕСТИРОВАНИЯ                                 -->
+    <!-- ===================================================================== -->
+    <footer class="max-w-5xl mx-auto w-full px-3 sm:px-4 py-5 border-t border-white/5 space-y-3">
+        <div class="rounded-2xl bg-[#090D16] border border-white/10 p-3 flex flex-wrap items-center justify-between gap-2">
+            <span class="text-[11px] font-mono text-slate-400">🧪 Быстрый тест:</span>
+            <div class="flex flex-wrap items-center gap-1.5">
+                <button type="button" data-action="demo-topup-shop" class="px-2.5 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/35 text-amber-300 text-[11px] font-semibold transition">
+                    +$100 SHOP
+                </button>
+                <button type="button" data-action="demo-add-btc" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/35 text-emerald-300 text-[11px] font-semibold transition">
+                    +0.0020 BTC
+                </button>
+                <button type="button" data-action="demo-invite-friend" class="px-2.5 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/35 text-sky-300 text-[11px] font-semibold transition">
+                    +1 Друг (10%)
+                </button>
+                <button type="button" data-action="demo-next-streak" class="px-2.5 py-1.5 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 border border-purple-400/35 text-purple-300 text-[11px] font-semibold transition">
+                    🎁 След. день стрика
+                </button>
+                <button type="button" data-action="open-admin-modal" class="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 border border-white/15 text-white text-[11px] font-semibold transition">
+                    🛡️ Админ
+                </button>
+                <button type="button" data-action="reset-demo" class="px-2.5 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/35 text-rose-300 text-[11px] font-semibold transition">
+                    Сброс
+                </button>
+            </div>
+        </div>
+        <div class="text-center text-[11px] text-slate-500">HASHGRID Virtual Cloud Mining • Безопасный некастодиальный симулятор</div>
+    </footer>
+
+    <!-- ===================================================================== -->
+    <!-- МОДАЛКА ВЫПОЛНЕНИЯ ЗАДАНИЯ (TELEGRAM / TIKTOK)                      -->
+    <!-- ===================================================================== -->
+    <div id="task-verify-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+        <div class="w-full max-w-md rounded-3xl bg-[#0B101B] border border-amber-400/40 p-6 shadow-2xl relative">
+            <button type="button" data-action="close-modal" data-target="task-verify-modal" class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 flex items-center justify-center">✕</button>
+            <div id="task-modal-content"></div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- МОДАЛКА ПОПОЛНЕНИЯ SHOP USD                                           -->
+    <!-- ===================================================================== -->
+    <div id="topup-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+        <div class="w-full max-w-md rounded-3xl bg-[#0B101B] border border-amber-400/40 p-6 shadow-2xl relative">
+            <button type="button" data-action="close-modal" data-target="topup-modal" class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 flex items-center justify-center">✕</button>
+            <div class="text-xs font-mono text-amber-300 uppercase">Пополнение счёта покупок</div>
+            <h3 class="text-xl font-black text-white mt-1">Заявка на пополнение SHOP USD</h3>
+            <p class="text-xs text-slate-400 mt-1">
+                На сайте не хранятся реальные средства. Выберите пакет под нужный ASIC и отправьте заявку — в кабинете админа её можно сразу одобрить для теста.
+            </p>
+            <form id="topup-form" class="mt-4 space-y-3.5">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Сумма пополнения (SHOP USD)</label>
+                    <select id="topup-amount-select" class="w-full px-3.5 py-2.5 rounded-xl bg-[#131B2E] border border-white/10 text-white text-sm font-mono">
+                        <option value="10">$10.00 (Подходит для ASIC Tier 2 • Pulse Rack)</option>
+                        <option value="99">$99.00 (Подходит для ASIC Tier 3 • Forge Vault)</option>
+                        <option value="109">$109.00 (Оба уровня Tier 2 + Tier 3)</option>
+                        <option value="100">$100.00 (Тестовое пополнение)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Способ / ID перевода (внешний кошелёк)</label>
+                    <input id="topup-tx-input" type="text" required placeholder="Например: USDT TRC20 • TX-88412" class="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-amber-400 focus:outline-none">
+                </div>
+                <button type="submit" class="w-full py-3.5 rounded-xl gold-btn font-black text-sm transition">
+                    Отправить заявку на пополнение
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- МОДАЛКА ЗАЯВКИ НА ВЫВОД                                               -->
+    <!-- ===================================================================== -->
+    <div id="withdraw-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+        <div class="w-full max-w-md rounded-3xl bg-[#0B101B] border border-emerald-400/40 p-6 shadow-2xl relative">
+            <button type="button" data-action="close-modal" data-target="withdraw-modal" class="absolute top-4 right-4 w-8 h-8 rounded-lg bg-white/5 hover:bg-white/15 text-slate-300 flex items-center justify-center">✕</button>
+            <h3 class="text-xl font-black text-white">Заявка на вывод средств</h3>
+            <p class="text-xs text-slate-400 mt-1">Условия Tier 2+, 3 активных друзей и порог по балансу выполнены.</p>
+
+            <form id="withdraw-form" class="mt-4 space-y-3.5">
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Сеть / валюта получения</label>
+                    <select id="withdraw-network-select" class="w-full px-3.5 py-2.5 rounded-xl bg-[#131B2E] border border-white/10 text-white text-sm">
+                        <option value="BTC">Bitcoin (BTC Mainnet)</option>
+                        <option value="USDT_TRC20">USDT (TRC-20)</option>
+                        <option value="TON">Toncoin (TON)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Адрес внешнего кошелька</label>
+                    <input id="withdraw-wallet-input" type="text" required placeholder="Введите адрес вашего кошелька..." class="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-amber-400 focus:outline-none">
+                </div>
+                <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-400/30 text-xs font-mono text-emerald-200">
+                    К выводу: <strong id="modal-withdraw-summary">0.00000000 BTC</strong>
+                </div>
+                <button type="submit" class="w-full py-3.5 rounded-xl gold-btn font-black text-sm transition">
+                    Создать заявку на вывод
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- КАБИНЕТ АДМИНИСТРАТОРА: ЗАДАНИЯ (TELEGRAM / TIKTOK) + ЗАЯВКИ + ТЕСТЫ -->
+    <!-- ===================================================================== -->
+    <div id="admin-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+        <div class="w-full max-w-3xl rounded-3xl bg-[#0A0F1A] border border-amber-400/45 p-5 sm:p-6 shadow-2xl relative my-auto space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between gap-2 pb-3 border-b border-white/10">
+                <div>
+                    <span class="text-[10px] font-mono uppercase text-amber-300">HASHGRID Control Panel • Admin</span>
+                    <h3 class="text-xl font-black text-white">Кабинет администратора</h3>
+                </div>
+                <button type="button" data-action="close-modal" data-target="admin-modal" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 text-slate-300 flex items-center justify-center">✕</button>
+            </div>
+
+            <!-- Блок 1: Добавление нового задания Telegram или TikTok -->
+            <div class="p-4 rounded-2xl bg-[#060911] border border-white/10 space-y-3">
+                <div class="text-xs font-extrabold text-white uppercase tracking-wider">➕ Добавить задание (Telegram / TikTok)</div>
+                <form id="admin-add-task-form" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Платформа</label>
+                        <select id="new-task-platform" class="w-full px-3 py-2 rounded-xl bg-[#131B2E] border border-white/10 text-white text-xs">
+                            <option value="Telegram">Telegram</option>
+                            <option value="TikTok">TikTok</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Буст и длительность</label>
+                        <select id="new-task-boost" class="w-full px-3 py-2 rounded-xl bg-[#131B2E] border border-white/10 text-white text-xs">
+                            <option value="10|2">+10% на 2 часа (стандарт)</option>
+                            <option value="15|2">+15% на 2 часа</option>
+                            <option value="10|4">+10% на 4 часа</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Название задания</label>
+                        <input id="new-task-title" type="text" required placeholder="Например: Подписка на новый TikTok" class="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-amber-400 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Ссылка (URL)</label>
+                        <input id="new-task-url" type="url" required placeholder="https://t.me/your_channel или https://tiktok.com/..." class="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-amber-400 focus:outline-none">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-[11px] text-slate-400 mb-1">Краткое описание для игрока</label>
+                        <input id="new-task-desc" type="text" placeholder="Зайдите по ссылке, подпишитесь и подтвердите выполнение." class="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-amber-400 focus:outline-none">
+                    </div>
+                    <div class="sm:col-span-2 flex justify-end">
+                        <button type="submit" class="px-5 py-2.5 rounded-xl gold-btn font-black text-xs transition">
+                            + Добавить задание в ферму
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Блок 2: Управление существующими заданиями (Пауза / Удалить) -->
+            <div class="space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <div class="text-xs font-extrabold text-white uppercase tracking-wider">📋 Активные и сохранённые задания</div>
+                    <button type="button" data-action="admin-reset-12h" class="text-[11px] font-mono text-emerald-300 hover:underline">
+                        Сбросить 12ч кулдаун у игроков
+                    </button>
+                </div>
+                <div id="admin-tasks-list" class="space-y-2"></div>
+            </div>
+
+            <!-- Блок 3: Заявки на пополнение SHOP USD и вывод -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 rounded-2xl bg-[#060911] border border-white/10 space-y-2.5">
+                    <div class="text-xs font-extrabold text-amber-300 uppercase">💳 Заявки на пополнение SHOP USD</div>
+                    <div id="admin-topups-list" class="space-y-2 text-xs"></div>
+                </div>
+                <div class="p-4 rounded-2xl bg-[#060911] border border-white/10 space-y-2.5">
+                    <div class="text-xs font-extrabold text-emerald-300 uppercase">💸 Заявки на вывод (ручная проверка)</div>
+                    <div id="admin-withdraws-list" class="space-y-2 text-xs"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =====================================================================
+        // 1. КОНФИГУРАЦИЯ МОНЕТ, 3 УРОВНЕЙ ASIC ($0 / $10 / $99) И 7-ДНЕВНОГО СТРИКА
+        // =====================================================================
+        const BTC_USD_RATE = 62500; // Ориентир для отображения ~$ в интерфейсе
+
+        const COINS = {
+            BTC: {
+                ticker: 'BTC',
+                name: 'Bitcoin',
+                usdPrice: BTC_USD_RATE,
+                basePerSecAtTier1: 0.00000000018, // ~0.0000155 BTC/день на Tier 1 (~$0.97)
+                accent: 'text-amber-300',
+                activeCard: 'bg-amber-500/15 border-amber-400/70'
+            },
+            LTC: {
+                ticker: 'LTC',
+                name: 'Litecoin',
+                usdPrice: 118,
+                basePerSecAtTier1: 0.000000095,
+                accent: 'text-sky-300',
+                activeCard: 'bg-sky-500/15 border-sky-400/70'
+            },
+            DOGE: {
+                ticker: 'DOGE',
+                name: 'Dogecoin',
+                usdPrice: 0.34,
+                basePerSecAtTier1: 0.000033,
+                accent: 'text-yellow-300',
+                activeCard: 'bg-yellow-500/15 border-yellow-400/70'
+            },
+            TON: {
+                ticker: 'TON',
+                name: 'Toncoin',
+                usdPrice: 6.4,
+                basePerSecAtTier1: 0.00000175,
+                accent: 'text-cyan-300',
+                activeCard: 'bg-cyan-500/15 border-cyan-400/70'
+            }
+        };
+
+        // 3 уровня ASIC согласно экономике пользователя:
+        // Tier 1: Nano S1 — бесплатно ($0), только демо-майнинг (нельзя вывести и нельзя купить ASIC за майнинг)
+        // Tier 2: Pulse Rack — $10 SHOP USD, порог вывода 0.00016 BTC (~$10) при Tier 2+ и 3 активных друзьях
+        // Tier 3: Forge Vault — $99 SHOP USD, флагманский кластер, порог вывода 0.0016 BTC (~$100) при Tier 2+ и 3 активных друзьях
+        const ASIC_FLEET = [
+            {
+                id: 'nano_s1',
+                tier: 1,
+                name: 'Nano S1',
+                badge: 'Tier 1 • Бесплатно ($0)',
+                hashrate: 38,
+                powerMult: 1,
+                priceUSD: 0,
+                withdrawThresholdBTC: null,
+                withdrawHint: 'Вывод закрыт на Tier 1',
+                efficiency: '28 J/TH',
+                temp: '54°C',
+                accent: 'text-amber-300',
+                cardClass: 'rig-card-t1'
+            },
+            {
+                id: 'pulse_rack',
+                tier: 2,
+                name: 'Pulse Rack',
+                badge: 'Tier 2 • $10 SHOP USD',
+                hashrate: 190,
+                powerMult: 5,
+                priceUSD: 10,
+                withdrawThresholdBTC: 0.00016,
+                withdrawHint: 'Порог вывода: 0.00016 BTC (~$10)',
+                efficiency: '20 J/TH',
+                temp: '47°C',
+                accent: 'text-emerald-300',
+                cardClass: 'rig-card-t2'
+            },
+            {
+                id: 'forge_vault',
+                tier: 3,
+                name: 'Forge Vault',
+                badge: 'Tier 3 • $99 SHOP USD • Flagship',
+                hashrate: 1250,
+                powerMult: 32,
+                priceUSD: 99,
+                withdrawThresholdBTC: 0.0016,
+                withdrawHint: 'Порог вывода: 0.0016 BTC (~$100)',
+                efficiency: '11 J/TH',
+                temp: '37°C',
+                accent: 'text-amber-300',
+                cardClass: 'rig-card-t3'
+            }
+        ];
+
+        // 7-дневный стрик с удвоением награды каждый день:
+        // День 1..7: 0.0000001 -> 0.0000064 BTC (сумма 0.0000127 BTC)
+        const DAILY_STREAK_REWARDS = [
+            { day: 1, btc: 0.0000001, label: 'День 1', tag: 'Старт' },
+            { day: 2, btc: 0.0000002, label: 'День 2', tag: 'x2' },
+            { day: 3, btc: 0.0000004, label: 'День 3', tag: 'x2' },
+            { day: 4, btc: 0.0000008, label: 'День 4', tag: 'x2' },
+            { day: 5, btc: 0.0000016, label: 'День 5', tag: 'x2' },
+            { day: 6, btc: 0.0000032, label: 'День 6', tag: 'x2' },
+            { day: 7, btc: 0.0000064, label: 'День 7', tag: 'СУПЕР 🏆' }
+        ];
+
+        const INITIAL_TASKS = [
+            {
+                id: 'task_tg_1',
+                platform: 'Telegram',
+                title: 'Подписка на официальный Telegram-канал',
+                desc: 'Откройте канал HASHGRID, подпишитесь на анонсы и подтвердите выполнение для буста +10% на 2 часа.',
+                url: 'https://t.me',
+                boostPct: 10,
+                durationHours: 2,
+                active: true
+            },
+            {
+                id: 'task_tt_1',
+                platform: 'TikTok',
+                title: 'Лайк и просмотр видео HASHGRID в TikTok',
+                desc: 'Перейдите в TikTok, поставьте лайк ролику о майнинг-ферме и вернитесь за бустом +10% на 2 часа.',
+                url: 'https://www.tiktok.com',
+                boostPct: 10,
+                durationHours: 2,
+                active: true
+            },
+            {
+                id: 'task_tg_2',
+                platform: 'Telegram',
+                title: 'Просмотр свежих постов в Telegram-чате',
+                desc: 'Ознакомьтесь с последними новостями сети и активируйте +10% к скорости ASIC на 2 часа.',
+                url: 'https://t.me',
+                boostPct: 10,
+                durationHours: 2,
+                active: true
+            }
+        ];
+
+        // =====================================================================
+        // 2. СОСТОЯНИЕ И ЛОКАЛЬНОЕ СОХРАНЕНИЕ
+        // =====================================================================
+        const STORAGE_KEY = 'hashgrid_sim_v7';
+        const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+        const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+
+        const defaultState = {
+            shopUSD: 10.00,
+            activeCoin: 'BTC',
+            minedBalances: {
+                BTC: 0.00001200,
+                LTC: 0.00650000,
+                DOGE: 2.20000000,
+                TON: 0.11500000
+            },
+            referralBonusBTC: 0,
+            equippedRigId: 'nano_s1',
+            ownedRigIds: ['nano_s1'],
+            isMining: true,
+            batteryPercent: 95,
+            boostEndTime: 0,
+            boostPercent: 0,
+            dailyStreakDay: 1,
+            dailyClaimedToday: false,
+            tasks12hResetTime: Date.now() + TWELVE_HOURS_MS,
+            completedTasks12h: [],
+            tasks: JSON.parse(JSON.stringify(INITIAL_TASKS)),
+            referrals: [],
+            topupRequests: [],
+            withdrawRequests: []
+        };
+
+        let state = loadState();
+        let lastRigSig = '';
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return JSON.parse(JSON.stringify(defaultState));
+                const parsed = JSON.parse(raw);
+                return {
+                    ...JSON.parse(JSON.stringify(defaultState)),
+                    ...parsed,
+                    minedBalances: {
+                        ...JSON.parse(JSON.stringify(defaultState.minedBalances)),
+                        ...(parsed.minedBalances || {})
+                    },
+                    tasks: Array.isArray(parsed.tasks) && parsed.tasks.length > 0
+                        ? parsed.tasks
+                        : JSON.parse(JSON.stringify(INITIAL_TASKS))
+                };
+            } catch (e) {
+                return JSON.parse(JSON.stringify(defaultState));
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                // Игнорируем ограничения хранилища
+            }
+        }
+
+        // =====================================================================
+        // 3. РАСЧЁТЫ МОЩНОСТИ, ДОБЫЧИ И УСЛОВИЙ ВЫВОДА
+        // =====================================================================
+        function getEquippedRig() {
+            return ASIC_FLEET.find(r => r.id === state.equippedRigId) || ASIC_FLEET[0];
+        }
+
+        function isBoostActive() {
+            return state.boostEndTime > Date.now() && state.boostPercent > 0;
+        }
+
+        function getActiveReferrals() {
+            return state.referrals.filter(r => r.active);
+        }
+
+        function getReferralsTotalTH() {
+            return getActiveReferrals().reduce((sum, r) => sum + r.hashrate, 0);
+        }
+
+        function getReferralBonusTH() {
+            return Number((getReferralsTotalTH() * 0.1).toFixed(1));
+        }
+
+        function getBatteryMultiplier() {
+            if (state.batteryPercent <= 0) return 0;
+            if (state.batteryPercent < 50) return 0.5;
+            if (state.batteryPercent < 90) return 0.85;
+            return state.batteryPercent / 100;
+        }
+
+        function getEffectiveHashrateTH() {
+            const rig = getEquippedRig();
+            const baseTH = rig.hashrate + getReferralBonusTH();
+            const boostMult = isBoostActive() ? (1 + state.boostPercent / 100) : 1;
+            const battMult = getBatteryMultiplier();
+            return Number((baseTH * boostMult * battMult).toFixed(1));
+        }
+
+        function getCurrentCoinRatePerSec() {
+            if (!state.isMining || state.batteryPercent <= 0) return 0;
+            const rig = getEquippedRig();
+            const coin = COINS[state.activeCoin];
+            const refFactor = 1 + getActiveReferrals().length * 0.03; // бонус +10% с добычи друзей начисляется отдельно, плюс небольшой сетевой множитель
+            const boostMult = isBoostActive() ? (1 + state.boostPercent / 100) : 1;
+            const battMult = getBatteryMultiplier();
+            return coin.basePerSecAtTier1 * rig.powerMult * refFactor * boostMult * battMult;
+        }
+
+        function applyBoost(pct, hours) {
+            const now = Date.now();
+            const durMs = hours * 60 * 60 * 1000;
+            if (state.boostEndTime > now) {
+                state.boostPercent = Math.min(100, state.boostPercent + pct);
+                state.boostEndTime = Math.max(state.boostEndTime, now + durMs);
+            } else {
+                state.boostPercent = pct;
+                state.boostEndTime = now + durMs;
+            }
+        }
+
+        // =====================================================================
+        // 4. ЛОГОТИПЫ МОНЕТ И 3D-РЕНДЕРЫ ASIC (ВСЕ 3 УРОВНЯ — ФЛАГМАН TIER 3)
+        // =====================================================================
+        function getCoinLogoSVG(ticker) {
+            if (ticker === 'BTC') {
+                return '<svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#F7931A"/><path d="M15.3 10.7C15.5 9.3 14.4 8.6 13 8.1L13.5 6.2L12.3 5.9L11.8 7.7C11.5 7.6 11.2 7.6 10.9 7.5L11.4 5.7L10.2 5.4L9.7 7.3C9.4 7.2 9.2 7.2 8.9 7.1L7.3 6.7L7 7.9L7.9 8.1C8.4 8.2 8.5 8.6 8.4 8.9L7.2 13.8C7.1 14 6.9 14.3 6.5 14.2L5.6 14L5 15.3L6.5 15.7L7.4 15.9L6.9 17.8L8.1 18.1L8.6 16.2L9.5 16.4L9 18.3L10.2 18.6L10.7 16.7C12.7 17.1 14.2 16.9 14.9 15.1C15.4 13.7 14.9 12.8 13.8 12.3C14.6 12.1 15.1 11.6 15.3 10.7ZM12.8 14.2C12.4 15.6 10.1 14.8 9.3 14.6L9.9 12.2C10.7 12.4 13.1 12.8 12.8 14.2ZM13.2 10.6C12.9 11.9 10.9 11.2 10.3 11.1L10.8 8.9C11.5 9.1 13.5 9.3 13.2 10.6Z" fill="white"/></svg>';
+            }
+            if (ticker === 'LTC') {
+                return '<svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#345D9D"/><path d="M10.7 14.6L11.4 12L13.1 11.4L13.5 9.9L11.8 10.5L12.8 6.8H9.8L8.4 11.8L7.1 12.3L6.7 13.8L8 13.3L7.2 16.5H15.8L16.4 14.6H10.7Z" fill="white"/></svg>';
+            }
+            if (ticker === 'DOGE') {
+                return '<svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#C2A633"/><path d="M8.5 7H12.3C15.1 7 16.8 8.9 16.8 12C16.8 15.1 15.1 17 12.3 17H8.5V7ZM10.7 8.9V15.1H12.1C13.7 15.1 14.5 13.9 14.5 12C14.5 10.1 13.7 8.9 12.1 8.9H10.7Z" fill="white"/><rect x="7" y="11.1" width="6.5" height="1.7" fill="white"/></svg>';
+            }
+            return '<svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#0098EA"/><path d="M15.8 7.5H8.2C6.9 7.5 6.1 8.9 6.8 10L11.3 17.5C11.6 18 12.4 18 12.7 17.5L17.2 10C17.9 8.9 17.1 7.5 15.8 7.5ZM11.2 14.7L8.3 9.7C8.1 9.4 8.3 9 8.7 9H11.2V14.7ZM15.7 9.7L12.8 14.7V9H15.3C15.7 9 15.9 9.4 15.7 9.7Z" fill="white"/></svg>';
+        }
+
+        function drawTurbine(cx, cy, r, color, animClass) {
+            return '<g>' +
+                '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="#05070C" stroke="#334155" stroke-width="2"/>' +
+                '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r - 2) + '" fill="none" stroke="' + color + '" stroke-opacity="0.42" stroke-width="1"/>' +
+                '<g class="fan-rotor ' + animClass + '">' +
+                '<path d="M' + cx + ' ' + (cy - r + 3) + ' C' + (cx + r * 0.45) + ' ' + (cy - r * 0.45) + ', ' + (cx + r * 0.4) + ' ' + (cy - 2) + ', ' + cx + ' ' + cy + ' Z" fill="' + color + '" fill-opacity="0.85"/>' +
+                '<path d="M' + (cx + r - 3) + ' ' + cy + ' C' + (cx + r * 0.45) + ' ' + (cy + r * 0.45) + ', ' + (cx + 2) + ' ' + (cy + r * 0.4) + ', ' + cx + ' ' + cy + ' Z" fill="' + color + '" fill-opacity="0.62"/>' +
+                '<path d="M' + cx + ' ' + (cy + r - 3) + ' C' + (cx - r * 0.45) + ' ' + (cy + r * 0.45) + ', ' + (cx - r * 0.4) + ' ' + (cy + 2) + ', ' + cx + ' ' + cy + ' Z" fill="' + color + '" fill-opacity="0.85"/>' +
+                '<path d="M' + (cx - r + 3) + ' ' + cy + ' C' + (cx - r * 0.45) + ' ' + (cy - r * 0.45) + ', ' + (cx - 2) + ' ' + (cy - r * 0.4) + ', ' + cx + ' ' + cy + ' Z" fill="' + color + '" fill-opacity="0.62"/>' +
+                '</g>' +
+                '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.65) + '" fill="none" stroke="#94A3B8" stroke-opacity="0.35" stroke-width="0.9"/>' +
+                '<line x1="' + (cx - r + 2) + '" y1="' + cy + '" x2="' + (cx + r - 2) + '" y2="' + cy + '" stroke="#94A3B8" stroke-opacity="0.3" stroke-width="0.9"/>' +
+                '<line x1="' + cx + '" y1="' + (cy - r + 2) + '" x2="' + cx + '" y2="' + (cy + r - 2) + '" stroke="#94A3B8" stroke-opacity="0.3" stroke-width="0.9"/>' +
+                '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.24) + '" fill="#1E293B" stroke="' + color + '" stroke-width="1.3"/>' +
+                '</g>';
+        }
+
+        function renderAsic3DSVG(rigId, spinning, boosted, sizeClass) {
+            const cls = sizeClass || 'w-52 h-44 sm:w-60 sm:h-48';
+            const f1 = !spinning ? '' : (boosted ? 'animate-spin-fan-turbo' : 'animate-spin-fan');
+            const f2 = !spinning ? '' : (boosted ? 'animate-spin-fan-turbo-rev' : 'animate-spin-fan-rev');
+            const orb1 = spinning ? 'animate-spin-orbit' : '';
+            const orb2 = spinning ? 'animate-spin-orbit-rev' : '';
+
+            if (rigId === 'nano_s1') {
+                return '<svg class="' + cls + ' shrink-0 drop-shadow-[0_14px_24px_rgba(245,158,11,0.28)]" viewBox="0 0 240 200" fill="none">' +
+                    '<defs><linearGradient id="t1Metal" x1="115" y1="35" x2="195" y2="165" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#E2E8F0"/><stop offset="55%" stop-color="#94A3B8"/><stop offset="100%" stop-color="#334155"/></linearGradient></defs>' +
+                    '<circle cx="120" cy="100" r="82" stroke="#F59E0B" stroke-width="2" stroke-opacity="0.45"/>' +
+                    '<ellipse cx="120" cy="176" rx="66" ry="9" fill="#000" fill-opacity="0.6"/>' +
+                    '<polygon points="54,48 118,32 190,50 124,68" fill="#94A3B8" stroke="#475569" stroke-width="1.2"/>' +
+                    '<polygon points="124,68 190,50 190,148 124,170" fill="url(#t1Metal)" stroke="#475569" stroke-width="1.5"/>' +
+                    '<rect x="137" y="76" width="40" height="44" rx="6" fill="#0F172A" stroke="#CBD5E1" stroke-width="2"/>' +
+                    '<rect x="142" y="82" width="30" height="24" rx="3" fill="#0284C7" fill-opacity="0.35" stroke="#38BDF8" stroke-width="1"/>' +
+                    '<text x="157" y="93" text-anchor="middle" fill="#7DD3FC" font-family="monospace" font-size="6.5" font-weight="bold">NANO S1</text>' +
+                    '<text x="157" y="102" text-anchor="middle" fill="#4ADE80" font-family="monospace" font-size="6" font-weight="bold">' + (spinning ? 'FREE ON' : 'PAUSED') + '</text>' +
+                    '<polygon points="54,48 124,68 124,170 54,148" fill="#0B0F19" stroke="#64748B" stroke-width="1.8"/>' +
+                    drawTurbine(89, 86, 21, '#FBBF24', f1) +
+                    drawTurbine(89, 132, 21, '#F59E0B', f2) +
+                    '</svg>';
+            }
+
+            if (rigId === 'pulse_rack') {
+                return '<svg class="' + cls + ' shrink-0 drop-shadow-[0_14px_28px_rgba(16,185,129,0.34)]" viewBox="0 0 260 200" fill="none">' +
+                    '<ellipse cx="130" cy="175" rx="95" ry="12" fill="#10B981" fill-opacity="0.18"/>' +
+                    '<polygon points="24,66 164,34 234,54 96,88" fill="#111827" stroke="#10B981" stroke-opacity="0.55" stroke-width="1.4"/>' +
+                    '<polygon points="24,66 164,34 164,132 24,166" fill="#070B12" stroke="#10B981" stroke-width="1.8"/>' +
+                    drawTurbine(50, 112, 19, '#34D399', f1) +
+                    drawTurbine(94, 101, 19, '#10B981', f2) +
+                    drawTurbine(138, 90, 19, '#34D399', f1) +
+                    '<polygon points="164,34 234,54 234,152 164,132" fill="#0D151C" stroke="#10B981" stroke-width="1.6"/>' +
+                    '<rect x="184" y="64" width="40" height="48" rx="5" fill="#04100C" stroke="#34D399" stroke-width="1.4"/>' +
+                    '<text x="204" y="83" text-anchor="middle" fill="#6EE7B7" font-family="monospace" font-size="6.5" font-weight="bold">PULSE R2</text>' +
+                    '<text x="204" y="94" text-anchor="middle" fill="#34D399" font-family="monospace" font-size="6" font-weight="bold">' + (spinning ? 'ACTIVE' : 'IDLE') + '</text>' +
+                    '<text x="204" y="104" text-anchor="middle" fill="#A7F3D0" font-family="monospace" font-size="5.5">190 TH/s</text>' +
+                    '</svg>';
+            }
+
+            // TIER 3: FORGE VAULT — Премиальный золотисто-обсидиановый флагманский кластер (6 турбин, медные трубки, OLED-экран, орбитальные кольца)
+            return '<svg class="' + cls + ' shrink-0 drop-shadow-[0_18px_38px_rgba(251,191,36,0.55)]" viewBox="0 0 280 215" fill="none">' +
+                '<defs>' +
+                '<linearGradient id="t3Gold" x1="20" y1="15" x2="260" y2="200" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FEF9C3"/><stop offset="35%" stop-color="#F59E0B"/><stop offset="75%" stop-color="#B45309"/><stop offset="100%" stop-color="#451A03"/></linearGradient>' +
+                '<linearGradient id="t3Obsidian" x1="30" y1="30" x2="210" y2="190" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#292524"/><stop offset="55%" stop-color="#0C0A09"/><stop offset="100%" stop-color="#050403"/></linearGradient>' +
+                '<linearGradient id="t3Side" x1="175" y1="30" x2="255" y2="180" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#3A2E1D"/><stop offset="55%" stop-color="#17120B"/><stop offset="100%" stop-color="#090705"/></linearGradient>' +
+                '<linearGradient id="t3Copper" x1="40" y1="20" x2="220" y2="70" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FDBA74"/><stop offset="50%" stop-color="#EA580C"/><stop offset="100%" stop-color="#9A3412"/></linearGradient>' +
+                '</defs>' +
+                '<ellipse cx="140" cy="192" rx="115" ry="15" fill="#F59E0B" fill-opacity="0.28"/>' +
+                '<circle cx="140" cy="105" r="96" stroke="url(#t3Gold)" stroke-width="2" stroke-dasharray="28 10" stroke-opacity="0.62" class="' + orb1 + '" style="transform-box: fill-box; transform-origin: center;"/>' +
+                '<circle cx="140" cy="105" r="84" stroke="#34D399" stroke-width="1.3" stroke-dasharray="12 8" stroke-opacity="0.52" class="' + orb2 + '" style="transform-box: fill-box; transform-origin: center;"/>' +
+                '<polygon points="24,52 178,20 256,44 102,78" fill="#1C1917" stroke="url(#t3Gold)" stroke-width="2"/>' +
+                '<polygon points="46,48 168,24 226,41 104,66" fill="#090705" stroke="#FBBF24" stroke-width="1.2"/>' +
+                '<path d="M62 47 L168 26" stroke="url(#t3Copper)" stroke-width="3.2" stroke-linecap="round"/>' +
+                '<path d="M80 53 L186 32" stroke="#34D399" stroke-width="2.5" stroke-linecap="round"/>' +
+                '<path d="M98 59 L204 38" stroke="url(#t3Copper)" stroke-width="3.2" stroke-linecap="round"/>' +
+                '<polygon points="24,52 178,20 178,154 24,188" fill="url(#t3Obsidian)" stroke="url(#t3Gold)" stroke-width="2.4"/>' +
+                '<line x1="26" y1="120" x2="176" y2="87" stroke="url(#t3Gold)" stroke-width="3.2"/>' +
+                drawTurbine(52, 84, 18, '#FDE047', f1) +
+                drawTurbine(101, 73, 19, '#34D399', f2) +
+                drawTurbine(150, 62, 18, '#FBBF24', f1) +
+                drawTurbine(52, 146, 18, '#34D399', f2) +
+                drawTurbine(101, 135, 19, '#FDE047', f1) +
+                drawTurbine(150, 124, 18, '#34D399', f2) +
+                '<polygon points="178,20 256,44 256,176 178,154" fill="url(#t3Side)" stroke="url(#t3Gold)" stroke-width="2.2"/>' +
+                '<line x1="187" y1="33" x2="187" y2="148" stroke="url(#t3Copper)" stroke-width="3.5" stroke-linecap="round"/>' +
+                '<rect x="196" y="48" width="50" height="44" rx="6" fill="#050403" stroke="#FBBF24" stroke-width="1.6"/>' +
+                '<text x="221" y="64" text-anchor="middle" fill="#FDE047" font-family="monospace" font-size="6.8" font-weight="bold">FORGE T3</text>' +
+                '<text x="221" y="75" text-anchor="middle" fill="#34D399" font-family="monospace" font-size="6.2" font-weight="bold">' + (spinning ? 'VAULT ON' : 'STANDBY') + '</text>' +
+                '<text x="221" y="85" text-anchor="middle" fill="#FBBF24" font-family="monospace" font-size="6">1250 TH/s</text>' +
+                '<rect x="196" y="100" width="50" height="46" rx="6" fill="#090705" stroke="#34D399" stroke-opacity="0.65" stroke-width="1.4"/>' +
+                '<rect x="203" y="108" width="36" height="6" rx="2" fill="#FBBF24"/>' +
+                '<rect x="203" y="118" width="36" height="6" rx="2" fill="#34D399"/>' +
+                '<rect x="203" y="128" width="28" height="6" rx="2" fill="#F59E0B"/>' +
+                '<polygon points="24,188 178,154 256,176 102,206" fill="#1C1917" stroke="url(#t3Gold)" stroke-width="1.8"/>' +
+                '</svg>';
+        }
+
+        // =====================================================================
+        // 5. РЕНДЕРИНГ КОМПОНЕНТОВ ИНТЕРФЕЙСА
+        // =====================================================================
+        function renderTopCoinSelector() {
+            const box = document.getElementById('top-coin-selector');
+            if (!box) return;
+            box.innerHTML = Object.values(COINS).map(c => {
+                const active = state.activeCoin === c.ticker;
+                const cls = active
+                    ? c.activeCard + ' text-white shadow-sm'
+                    : 'bg-white/[0.03] border-white/10 text-slate-400 hover:text-white';
+                return '<button type="button" data-action="select-coin" data-coin="' + c.ticker + '" class="px-2 py-1.5 rounded-xl border text-left transition-all flex items-center gap-1.5 ' + cls + '">' +
+                    getCoinLogoSVG(c.ticker) +
+                    '<div class="min-w-0">' +
+                        '<div class="font-extrabold text-xs leading-tight ' + (active ? c.accent : '') + '">' + c.ticker + '</div>' +
+                        '<div class="text-[9px] font-mono text-slate-400 leading-tight truncate">' + c.name + '</div>' +
+                    '</div>' +
+                    '</button>';
+            }).join('');
+        }
+
+        function renderTerminalRigStage(force) {
+            const rig = getEquippedRig();
+            const running = state.isMining && state.batteryPercent > 0;
+            const boosted = isBoostActive();
+            const sig = rig.id + '_' + running + '_' + boosted;
+            if (!force && sig === lastRigSig) return;
+            lastRigSig = sig;
+
+            const stage = document.getElementById('terminal-rig-stage');
+            const inner = document.getElementById('terminal-rig-inner');
+            if (!stage || !inner) return;
+
+            stage.className = 'rounded-3xl p-5 sm:p-7 relative overflow-hidden transition-all duration-500 ' + rig.cardClass;
+
+            const statusBadge = running
+                ? '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-[11px] font-mono font-bold"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>ACTIVE MINING</span>'
+                : '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-300 text-[11px] font-mono font-bold">STANDBY</span>';
+
+            inner.innerHTML =
+                '<div class="flex flex-col md:flex-row items-center justify-between gap-6">' +
+                    '<div class="flex items-center justify-center">' +
+                        renderAsic3DSVG(rig.id, running, boosted, 'w-52 h-44 sm:w-60 sm:h-48') +
+                    '</div>' +
+                    '<div class="flex-1 text-center md:text-left space-y-3 w-full">' +
+                        '<div class="flex flex-wrap items-center justify-center md:justify-start gap-2">' +
+                            '<span class="px-3 py-1 rounded-full bg-black/55 border border-white/10 text-[11px] font-mono font-bold ' + rig.accent + '">' + rig.badge + '</span>' +
+                            statusBadge +
+                        '</div>' +
+                        '<h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight">' + rig.name + '</h2>' +
+                        '<div class="grid grid-cols-3 gap-2 max-w-lg mx-auto md:mx-0">' +
+                            '<div class="px-3 py-2 rounded-xl bg-black/55 border border-white/10">' +
+                                '<div class="text-[10px] font-mono text-slate-400">Мощность</div>' +
+                                '<div id="rig-stage-hashrate" class="font-mono font-extrabold text-sm ' + rig.accent + '">' + getEffectiveHashrateTH() + ' TH/s</div>' +
+                            '</div>' +
+                            '<div class="px-3 py-2 rounded-xl bg-black/55 border border-white/10">' +
+                                '<div class="text-[10px] font-mono text-slate-400">Эффективн.</div>' +
+                                '<div class="font-mono font-extrabold text-sm text-white">' + rig.efficiency + '</div>' +
+                            '</div>' +
+                            '<div class="px-3 py-2 rounded-xl bg-black/55 border border-white/10">' +
+                                '<div class="text-[10px] font-mono text-slate-400">Вывод</div>' +
+                                '<div class="font-mono font-extrabold text-xs sm:text-sm text-emerald-300">' + (rig.withdrawThresholdBTC ? rig.withdrawThresholdBTC + ' BTC' : 'Закрыт') + '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="pt-1">' +
+                            '<button type="button" data-action="switch-tab" data-tab="fleet" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold text-xs transition">Перейти в ASIC Ферму ($10 / $99) →</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        }
+
+        function renderPowerCells6Grid() {
+            const grid = document.getElementById('power-cells-6-grid');
+            if (!grid) return;
+
+            const pct = Math.max(0, Math.min(100, Math.round(state.batteryPercent)));
+            const subEl = document.getElementById('power-cells-sub');
+            const bigPctEl = document.getElementById('power-big-percent');
+            const badgeEl = document.getElementById('power-ready-badge');
+            const warnEl = document.getElementById('power-warning-text');
+
+            if (subEl) subEl.textContent = pct + '/100 ячеек заряжено • 1 ячейка = 1% мощности';
+            if (bigPctEl) {
+                bigPctEl.textContent = pct + '%';
+                bigPctEl.className = 'font-mono font-black text-4xl sm:text-5xl ' + (pct >= 98 ? 'text-emerald-400' : pct >= 90 ? 'text-amber-300' : 'text-rose-400');
+            }
+            if (badgeEl) {
+                badgeEl.textContent = pct >= 90 ? 'READY' : 'LOW POWER';
+                badgeEl.className = pct >= 90
+                    ? 'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40'
+                    : 'px-2.5 py-0.5 rounded-full text-[10px] font-mono font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/40';
+            }
+            if (warnEl) {
+                warnEl.innerHTML = pct >= 98
+                    ? '<div class="text-emerald-300 font-semibold">● Оптимальный заряд батареи</div><div class="text-slate-400">Максимальная стабильность хэшрейта</div>'
+                    : '<div>● Рекомендуется подзарядка батареи</div><div class="text-slate-400">Держите заряд выше 98% для максимальной стабильности</div>';
+            }
+
+            const topLevel = Math.max(6, pct);
+            const levels = [topLevel, topLevel - 1, topLevel - 2, topLevel - 3, topLevel - 4, topLevel - 5];
+
+            grid.innerHTML = levels.map((lvl, idx) => {
+                const isActiveCell = idx === 5;
+                const isCharged = lvl <= pct;
+                const fillClass = pct >= 90 ? 'battery-green-fill' : 'battery-amber-fill';
+                const shellClass = isActiveCell ? (pct >= 90 ? 'battery-shell-active' : 'battery-shell-low') : '';
+
+                let innerBody = '';
+                if (isActiveCell) {
+                    const segs = Math.max(1, Math.min(5, Math.ceil((pct / 100) * 5)));
+                    let bars = '';
+                    for (let s = 5; s >= 1; s--) {
+                        bars += '<div class="h-2.5 rounded-sm ' + (s <= segs ? fillClass : 'bg-white/10') + '"></div>';
+                    }
+                    innerBody = '<div class="text-[10px] font-mono font-extrabold text-emerald-300">' + (pct >= 95 ? 'FULL' : 'ACTIVE') + '</div><div class="w-full space-y-1.5 mt-1">' + bars + '</div>';
+                } else {
+                    innerBody = '<div class="text-xs font-mono font-bold ' + (isCharged ? 'text-emerald-300' : 'text-slate-500') + '">' + (isCharged ? '+' : '•') + '</div><div class="w-full h-16 sm:h-20 rounded-xl ' + (isCharged ? fillClass : 'bg-white/5 border border-white/10') + '"></div>';
+                }
+
+                return '<div class="flex flex-col items-center">' +
+                    '<div class="w-8 sm:w-10 h-2 battery-cap"></div>' +
+                    '<div class="w-full battery-shell ' + shellClass + ' rounded-2xl p-2.5 sm:p-3 flex flex-col items-center justify-between h-36 sm:h-40">' +
+                        '<div class="font-mono font-black text-base sm:text-xl text-white">' + lvl + '</div>' +
+                        innerBody +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderFleetCards() {
+            const grid = document.getElementById('fleet-cards-grid');
+            const shopEl = document.getElementById('fleet-shop-usd');
+            if (shopEl) shopEl.textContent = '$' + state.shopUSD.toFixed(2);
+            if (!grid) return;
+
+            grid.innerHTML = ASIC_FLEET.map(rig => {
+                const isOwned = state.ownedRigIds.includes(rig.id);
+                const isEquipped = state.equippedRigId === rig.id;
+
+                let btnHtml = '';
+                if (isEquipped) {
+                    btnHtml = '<button type="button" disabled class="w-full py-3 rounded-xl bg-emerald-500/20 border border-emerald-400/45 text-emerald-300 font-extrabold text-xs sm:text-sm cursor-default">✓ Активен в терминале</button>';
+                } else if (isOwned) {
+                    btnHtml = '<button type="button" data-action="equip-rig" data-rig="' + rig.id + '" class="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm transition">Установить в терминал</button>';
+                } else {
+                    btnHtml = '<button type="button" data-action="buy-rig" data-rig="' + rig.id + '" class="w-full py-3 rounded-xl gold-btn font-black text-xs sm:text-sm transition">Купить за $' + rig.priceUSD + ' SHOP USD</button>';
+                }
+
+                return '<div class="rounded-3xl p-5 flex flex-col justify-between ' + rig.cardClass + '">' +
+                    '<div>' +
+                        '<div class="flex items-center justify-between gap-2 mb-3">' +
+                            '<span class="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-black/55 ' + rig.accent + ' font-bold border border-white/10">' + rig.badge + '</span>' +
+                            '<span class="font-mono font-black text-sm text-white">' + rig.hashrate + ' TH/s</span>' +
+                        '</div>' +
+                        '<div class="my-3 flex justify-center">' +
+                            renderAsic3DSVG(rig.id, isEquipped, false, 'w-48 h-36') +
+                        '</div>' +
+                        '<h3 class="text-xl font-black text-white">' + rig.name + '</h3>' +
+                        '<div class="mt-3 px-3 py-2 rounded-xl bg-black/45 border border-white/10 text-[11px] font-mono text-emerald-300">' +
+                            rig.withdrawHint +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="mt-5 pt-4 border-t border-white/10">' + btnHtml + '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderDailyRewardsSection() {
+            const grid = document.getElementById('daily-streak-grid');
+            const curDay = Math.max(1, Math.min(7, Number(state.dailyStreakDay) || 1));
+            const rewardObj = DAILY_STREAK_REWARDS.find(r => r.day === curDay) || DAILY_STREAK_REWARDS[0];
+            const btn = document.getElementById('claim-daily-gift-btn');
+            const label = document.getElementById('daily-gift-status-label');
+            const boxCard = document.getElementById('daily-gift-box-card');
+
+            if (btn && label && boxCard) {
+                if (state.dailyClaimedToday) {
+                    btn.disabled = true;
+                    btn.textContent = '✓ Забрано сегодня';
+                    btn.className = 'w-full py-3 px-4 rounded-xl bg-white/10 text-slate-400 font-bold text-xs sm:text-sm cursor-default';
+                    label.innerHTML = 'День <span id="daily-streak-num">' + curDay + '</span> из 7 • Награда получена';
+                    boxCard.classList.remove('cursor-pointer');
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = 'Открыть подарок 🎁';
+                    btn.className = 'w-full py-3 px-4 rounded-xl gold-btn font-black text-xs sm:text-sm transition';
+                    label.innerHTML = 'День <span id="daily-streak-num">' + curDay + '</span> из 7 • +' + rewardObj.btc.toFixed(7) + ' BTC';
+                    boxCard.classList.add('cursor-pointer');
+                }
+            }
+
+            if (!grid) return;
+            grid.innerHTML = DAILY_STREAK_REWARDS.map(item => {
+                const isCurrent = item.day === curDay;
+                const isPast = item.day < curDay || (isCurrent && state.dailyClaimedToday);
+                let cardStyle = 'bg-black/45 border-white/10 text-slate-300';
+                if (isCurrent && !state.dailyClaimedToday) {
+                    cardStyle = 'bg-amber-400/20 border-amber-400 text-white ring-1 ring-amber-300/60';
+                } else if (isPast) {
+                    cardStyle = 'bg-emerald-500/10 border-emerald-400/35 text-emerald-300';
+                }
+
+                return '<div class="p-2.5 rounded-2xl text-center border transition flex flex-col justify-between ' + cardStyle + '">' +
+                    '<div class="flex items-center justify-between text-[10px] font-mono">' +
+                        '<span class="font-bold">' + item.label + '</span>' +
+                        '<span class="text-amber-300 font-bold">' + item.tag + '</span>' +
+                    '</div>' +
+                    '<div class="text-lg my-1">' + (isPast ? '✅' : (item.day === 7 ? '🏆' : '🎁')) + '</div>' +
+                    '<div class="font-mono font-extrabold text-[11px] leading-tight break-all">+' + item.btc.toFixed(7) + '</div>' +
+                    '<div class="text-[9px] font-mono text-slate-400">BTC</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function renderTasksInto(containerId) {
+            const grid = document.getElementById(containerId);
+            if (!grid) return;
+
+            const activeTasks = state.tasks.filter(t => t.active);
+            if (activeTasks.length === 0) {
+                grid.innerHTML = '<div class="col-span-full p-4 rounded-2xl bg-[#060911] border border-white/10 text-xs text-slate-400 text-center">Задания временно на паузе. Добавьте или включите задания в <strong>Кабинете админа</strong>.</div>';
+                return;
+            }
+
+            grid.innerHTML = activeTasks.map(t => {
+                const done = state.completedTasks12h.includes(t.id);
+                const icon = t.platform === 'TikTok' ? '🎵' : '✈️';
+                const badgeCls = t.platform === 'TikTok'
+                    ? 'text-pink-300 bg-pink-500/15 border-pink-400/35'
+                    : 'text-sky-300 bg-sky-500/15 border-sky-400/35';
+
+                const btnHtml = done
+                    ? '<button type="button" disabled class="w-full py-2.5 px-3 rounded-xl font-black text-xs bg-white/5 text-slate-500 cursor-default">Выполнено (цикл 12ч)</button>'
+                    : '<button type="button" data-action="open-task-modal" data-task="' + t.id + '" class="w-full py-2.5 px-3 rounded-xl font-black text-xs gold-btn transition">Выполнить (+' + t.boostPct + '% на ' + t.durationHours + 'ч)</button>';
+
+                return '<div class="rounded-2xl bg-[#060911] border ' + (done ? 'border-emerald-400/25 opacity-75' : 'border-white/10 hover:border-amber-400/40') + ' p-4 flex flex-col justify-between gap-3 transition">' +
+                    '<div>' +
+                        '<div class="flex items-center justify-between gap-2 mb-2">' +
+                            '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border text-[11px] font-bold ' + badgeCls + '">' + icon + ' ' + t.platform + '</span>' +
+                            '<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-400/15 text-amber-300 border border-amber-400/30">+' + t.boostPct + '% / ' + t.durationHours + 'ч</span>' +
+                        '</div>' +
+                        '<h4 class="text-sm font-extrabold text-white">' + t.title + '</h4>' +
+                        '<p class="text-[11px] text-slate-400 mt-1 leading-relaxed">' + t.desc + '</p>' +
+                    '</div>' +
+                    btnHtml +
+                '</div>';
+            }).join('');
+        }
+
+        function renderAllTasks() {
+            renderTasksInto('terminal-tasks-grid');
+            renderTasksInto('rewards-tasks-grid');
+        }
+
+        function renderReferralsBlock() {
+            const list = document.getElementById('referrals-list');
+            const countEl = document.getElementById('ref-count-inline');
+            const thEl = document.getElementById('ref-total-th-display');
+            const btcEl = document.getElementById('ref-passive-btc');
+            if (!list) return;
+
+            const activeRefs = getActiveReferrals();
+            if (countEl) countEl.textContent = activeRefs.length + ' / 3';
+            if (thEl) thEl.textContent = 'Бонус: +' + getReferralBonusTH() + ' TH/s (10% от активных друзей)';
+            if (btcEl) btcEl.textContent = '+' + state.referralBonusBTC.toFixed(8) + ' BTC';
+
+            if (state.referrals.length === 0) {
+                list.innerHTML = '<div class="col-span-full p-4 rounded-2xl bg-[#060911] border border-dashed border-white/15 text-center text-xs text-slate-400">Пока нет рефералов. Нажмите <strong>«+1 Друг (10%)»</strong> внизу для проверки расчёта 10% и счётчика 3/3.</div>';
+                return;
+            }
+
+            list.innerHTML = state.referrals.map(r =>
+                '<div class="p-3.5 rounded-2xl bg-[#060911] border border-emerald-400/25 flex items-center justify-between gap-2">' +
+                    '<div>' +
+                        '<div class="font-bold text-xs sm:text-sm text-white">' + r.name + '</div>' +
+                        '<div class="text-[11px] font-mono text-slate-400">' + r.rigName + ' • ' + r.hashrate + ' TH/s</div>' +
+                    '</div>' +
+                    '<div class="text-right">' +
+                        '<span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-mono font-bold text-[11px]">+10%</span>' +
+                        '<div class="text-[10px] font-mono text-amber-300 mt-0.5">+' + (r.hashrate * 0.1).toFixed(1) + ' TH/s</div>' +
+                    '</div>' +
+                '</div>'
+            ).join('');
+        }
+
+        function getRequiredThresholdBTCForRig(rig) {
+            if (!rig.withdrawThresholdBTC) return null;
+            return rig.withdrawThresholdBTC;
+        }
+
+        function updateWithdrawalBlock() {
+            const grid = document.getElementById('withdrawal-rules-grid');
+            const logEl = document.getElementById('withdraw-requests-log');
+            const rig = getEquippedRig();
+            const btcBal = state.minedBalances.BTC || 0;
+            const thresholdBTC = getRequiredThresholdBTCForRig(rig);
+            const activeRefsCount = getActiveReferrals().length;
+
+            const tierOk = rig.tier >= 2;
+            const refsOk = activeRefsCount >= 3;
+            const amountOk = thresholdBTC !== null && btcBal >= thresholdBTC;
+
+            if (grid) {
+                const rules = [
+                    {
+                        ok: tierOk,
+                        title: 'Уровень ASIC от Tier 2 (Pulse Rack+)',
+                        sub: 'Сейчас: ' + rig.name + ' (Tier ' + rig.tier + ') • Бесплатный Tier 1 не выводит'
+                    },
+                    {
+                        ok: refsOk,
+                        title: 'Минимум 3 активных друга (+10% бонус)',
+                        sub: 'Активных друзей: ' + activeRefsCount + ' / 3'
+                    },
+                    {
+                        ok: amountOk,
+                        title: thresholdBTC ? 'Накоплено от ' + thresholdBTC.toFixed(5) + ' BTC' : 'Купите ASIC Tier 2 ($10) или Tier 3 ($99)',
+                        sub: 'Баланс BTC: ' + btcBal.toFixed(8) + ' BTC (~$' + (btcBal * BTC_USD_RATE).toFixed(2) + ')'
+                    }
+                ];
+
+                grid.innerHTML = rules.map(r =>
+                    '<div class="p-4 rounded-2xl bg-[#060911] border ' + (r.ok ? 'border-emerald-400/45' : 'border-white/10') + ' flex items-start gap-3">' +
+                        '<span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ' + (r.ok ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/15 text-amber-300') + '">' + (r.ok ? '✓' : '!') + '</span>' +
+                        '<div>' +
+                            '<div class="text-xs sm:text-sm font-bold text-white">' + r.title + '</div>' +
+                            '<div class="text-[11px] font-mono text-slate-400 mt-0.5">' + r.sub + '</div>' +
+                        '</div>' +
+                    '</div>'
+                ).join('');
+            }
+
+            const summaryEl = document.getElementById('withdraw-summary-amount');
+            const hintEl = document.getElementById('withdraw-lock-hint');
+            const btn = document.getElementById('withdraw-action-btn');
+
+            if (summaryEl) {
+                summaryEl.textContent = btcBal.toFixed(8) + ' BTC (~$' + (btcBal * BTC_USD_RATE).toFixed(2) + ')';
+            }
+            const unlocked = tierOk && refsOk && amountOk;
+            if (btn) btn.disabled = !unlocked;
+            if (hintEl) {
+                if (unlocked) {
+                    hintEl.textContent = '✓ Все условия выполнены! Можно создать заявку на вывод.';
+                    hintEl.className = 'text-[11px] text-emerald-300 font-semibold mt-1';
+                } else {
+                    hintEl.textContent = 'Выполните все 3 условия выше, чтобы открыть вывод средств.';
+                    hintEl.className = 'text-[11px] text-amber-300 mt-1';
+                }
+            }
+
+            if (logEl) {
+                if (state.withdrawRequests.length === 0) {
+                    logEl.innerHTML = '';
+                } else {
+                    logEl.innerHTML = '<div class="text-[11px] font-mono text-slate-400 uppercase">Созданные заявки на вывод:</div>' +
+                        state.withdrawRequests.map(w =>
+                            '<div class="p-3 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between text-xs font-mono">' +
+                                '<div><strong class="text-white">' + w.amountBTC.toFixed(8) + ' BTC</strong> <span class="text-slate-400">(' + w.network + ' • ' + w.wallet + ')</span></div>' +
+                                '<span class="px-2 py-0.5 rounded ' + (w.status === 'Одобрено' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300') + '">' + w.status + '</span>' +
+                            '</div>'
+                        ).join('');
+                }
+            }
+        }
+
+        // =====================================================================
+        // 6. КАБИНЕТ АДМИНИСТРАТОРА (ЗАДАНИЯ, ПОПОЛНЕНИЯ, ВЫВОДЫ)
+        // =====================================================================
+        function renderAdminModalContent() {
+            const tasksList = document.getElementById('admin-tasks-list');
+            const topupsList = document.getElementById('admin-topups-list');
+            const withdrawsList = document.getElementById('admin-withdraws-list');
+
+            if (tasksList) {
+                tasksList.innerHTML = state.tasks.map(t =>
+                    '<div class="p-3 rounded-xl bg-[#0A0F1A] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">' +
+                        '<div class="min-w-0">' +
+                            '<div class="flex items-center gap-2">' +
+                                '<span class="font-mono font-bold text-amber-300">[' + t.platform + ']</span>' +
+                                '<strong class="text-white truncate">' + t.title + '</strong>' +
+                                '<span class="text-[10px] font-mono px-1.5 py-0.5 rounded ' + (t.active ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-700 text-slate-300') + '">' + (t.active ? 'Активно' : 'Пауза') + '</span>' +
+                            '</div>' +
+                            '<div class="text-[10px] font-mono text-slate-400 truncate mt-0.5">+' + t.boostPct + '% на ' + t.durationHours + 'ч • ' + t.url + '</div>' +
+                        '</div>' +
+                        '<div class="flex items-center gap-1.5 shrink-0">' +
+                            '<button type="button" data-action="admin-toggle-task" data-task="' + t.id + '" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-white font-semibold">' + (t.active ? 'Пауза' : 'Вкл') + '</button>' +
+                            '<button type="button" data-action="admin-delete-task" data-task="' + t.id + '" class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-semibold">Удалить</button>' +
+                        '</div>' +
+                    '</div>'
+                ).join('');
+            }
+
+            if (topupsList) {
+                if (state.topupRequests.length === 0) {
+                    topupsList.innerHTML = '<div class="text-slate-500">Заявок на пополнение пока нет.</div>';
+                } else {
+                    topupsList.innerHTML = state.topupRequests.map(req =>
+                        '<div class="p-2.5 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between gap-2">' +
+                            '<div>' +
+                                '<div class="font-mono font-bold text-white">+$' + req.amount.toFixed(2) + ' SHOP USD</div>' +
+                                '<div class="text-[10px] text-slate-400 font-mono truncate">' + req.tx + ' • ' + req.status + '</div>' +
+                            '</div>' +
+                            (req.status === 'Ожидает'
+                                ? '<button type="button" data-action="admin-approve-topup" data-id="' + req.id + '" class="px-2.5 py-1 rounded-lg gold-btn font-black text-[11px]">Начислить</button>'
+                                : '<span class="text-emerald-400 font-mono text-[11px]">✓</span>') +
+                        '</div>'
+                    ).join('');
+                }
+            }
+
+            if (withdrawsList) {
+                if (state.withdrawRequests.length === 0) {
+                    withdrawsList.innerHTML = '<div class="text-slate-500">Заявок на вывод пока нет.</div>';
+                } else {
+                    withdrawsList.innerHTML = state.withdrawRequests.map(w =>
+                        '<div class="p-2.5 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between gap-2">' +
+                            '<div>' +
+                                '<div class="font-mono font-bold text-white">' + w.amountBTC.toFixed(8) + ' BTC</div>' +
+                                '<div class="text-[10px] text-slate-400 font-mono truncate">' + w.network + ' • ' + w.status + '</div>' +
+                            '</div>' +
+                            (w.status === 'Ожидает проверки'
+                                ? '<button type="button" data-action="admin-approve-withdraw" data-id="' + w.id + '" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-300 font-bold text-[11px]">Подтвердить</button>'
+                                : '<span class="text-emerald-400 font-mono text-[11px]">✓</span>') +
+                        '</div>'
+                    ).join('');
+                }
+            }
+        }
+
+        // =====================================================================
+        // 7. ОБРАБОТЧИКИ ДЕЙСТВИЙ И ЦИКЛ МАЙНИНГА В РЕАЛЬНОМ ВРЕМЕНИ
+        // =====================================================================
+        function formatHMS(ms) {
+            const sec = Math.max(0, Math.floor(ms / 1000));
+            const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+            const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+            const s = String(sec % 60).padStart(2, '0');
+            return h + ':' + m + ':' + s;
+        }
+
+        function refreshLiveUI() {
+            const coin = COINS[state.activeCoin];
+            const bal = state.minedBalances[state.activeCoin] || 0;
+            const btcBal = state.minedBalances.BTC || 0;
+            const rate = getCurrentCoinRatePerSec();
+            const effTH = getEffectiveHashrateTH();
+            const rig = getEquippedRig();
+
+            // Шапка
+            ['header-shop-usd-desk', 'header-shop-usd-mob'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '$' + state.shopUSD.toFixed(2);
+            });
+            const mBtcDesk = document.getElementById('header-mining-btc-desk');
+            const mUsdDesk = document.getElementById('header-mining-usd-desk');
+            const mBtcMob = document.getElementById('header-mining-btc-mob');
+            const mUsdMob = document.getElementById('header-mining-usd-mob');
+            if (mBtcDesk) mBtcDesk.textContent = btcBal.toFixed(8) + ' BTC';
+            if (mUsdDesk) mUsdDesk.textContent = '~$' + (btcBal * BTC_USD_RATE).toFixed(2);
+            if (mBtcMob) mBtcMob.textContent = btcBal.toFixed(8);
+            if (mUsdMob) mUsdMob.textContent = '~$' + (btcBal * BTC_USD_RATE).toFixed(2);
+
+            // Буст-баннер
+            const boostBanner = document.getElementById('boost-banner');
+            if (boostBanner) {
+                if (isBoostActive()) {
+                    boostBanner.classList.remove('hidden');
+                    const bt = document.getElementById('boost-banner-title');
+                    const btm = document.getElementById('boost-banner-timer');
+                    if (bt) bt.textContent = 'БУСТ МОЩНОСТИ +' + state.boostPercent + '% АКТИВЕН';
+                    if (btm) btm.textContent = formatHMS(state.boostEndTime - Date.now());
+                } else {
+                    boostBanner.classList.add('hidden');
+                }
+            }
+
+            // Счётчик в терминале
+            const rigHashEl = document.getElementById('rig-stage-hashrate');
+            if (rigHashEl) rigHashEl.textContent = effTH + ' TH/s';
+
+            const tName = document.getElementById('term-coin-name');
+            const tRate = document.getElementById('term-coin-rate');
+            const tEff = document.getElementById('term-efficiency-pill');
+            const tAmt = document.getElementById('term-live-amount');
+            const tTick = document.getElementById('term-coin-ticker');
+            const tUsd = document.getElementById('term-live-usd');
+            const tRef = document.getElementById('term-ref-bonus-label');
+
+            if (tName) tName.textContent = coin.name;
+            if (tRate) tRate.textContent = '+' + rate.toFixed(10) + ' / сек';
+            if (tEff) tEff.textContent = 'КПД ' + Math.round(getBatteryMultiplier() * 100) + '%';
+            if (tAmt) tAmt.textContent = bal.toFixed(8);
+            if (tTick) tTick.textContent = coin.ticker;
+            if (tUsd) tUsd.textContent = '~$' + (bal * coin.usdPrice).toFixed(2);
+            if (tRef) tRef.textContent = '+' + getReferralBonusTH() + ' TH/s';
+
+            // Прогресс до порога
+            const targetBTC = rig.withdrawThresholdBTC || 0.00016;
+            const curForBar = state.activeCoin === 'BTC' ? bal : (bal * coin.usdPrice) / BTC_USD_RATE;
+            const pct = Math.min(100, (curForBar / targetBTC) * 100);
+
+            const pCur = document.getElementById('term-prog-cur');
+            const pTgt = document.getElementById('term-prog-target');
+            const pTick = document.getElementById('term-prog-ticker');
+            const pBar = document.getElementById('term-prog-bar');
+            const pPct = document.getElementById('term-prog-pct');
+            if (pCur) pCur.textContent = curForBar.toFixed(8);
+            if (pTgt) pTgt.textContent = targetBTC.toFixed(8);
+            if (pTick) pTick.textContent = 'BTC';
+            if (pBar) pBar.style.width = pct.toFixed(2) + '%';
+            if (pPct) pPct.textContent = 'Прогресс к порогу (' + targetBTC + ' BTC): ' + pct.toFixed(1) + '%';
+
+            // Кнопка старт/пауза
+            const toggleBtn = document.getElementById('toggle-mining-btn');
+            const dot = document.getElementById('live-status-dot');
+            if (toggleBtn && dot) {
+                if (state.isMining && state.batteryPercent > 0) {
+                    toggleBtn.innerHTML = '<span>⏸️ Остановить майнинг</span>';
+                    toggleBtn.className = 'py-3.5 px-5 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 font-extrabold text-sm transition-all flex items-center justify-center gap-2';
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping';
+                } else {
+                    toggleBtn.innerHTML = '<span>▶️ Запустить майнинг</span>';
+                    toggleBtn.className = 'py-3.5 px-5 rounded-2xl gold-btn font-black text-sm transition-all flex items-center justify-center gap-2';
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+                }
+            }
+
+            // Таймер 12ч заданий
+            if (state.tasks12hResetTime <= Date.now()) {
+                state.tasks12hResetTime = Date.now() + TWELVE_HOURS_MS;
+                state.completedTasks12h = [];
+                renderAllTasks();
+            }
+            const hms12 = formatHMS(state.tasks12hResetTime - Date.now());
+            ['term-tasks-timer', 'rewards-tasks-timer'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = hms12;
+            });
+
+            updateWithdrawalBlock();
+        }
+
+        setInterval(() => {
+            const rate = getCurrentCoinRatePerSec();
+            if (rate > 0) {
+                const delta = rate * 0.25;
+                state.minedBalances[state.activeCoin] = (state.minedBalances[state.activeCoin] || 0) + delta;
+
+                // 10% от майнинга активных рефералов начисляется сверху в BTC
+                const activeRefsCount = getActiveReferrals().length;
+                if (activeRefsCount > 0) {
+                    const refGainBTC = COINS.BTC.basePerSecAtTier1 * 5 * activeRefsCount * 0.1 * 0.25;
+                    state.minedBalances.BTC += refGainBTC;
+                    state.referralBonusBTC += refGainBTC;
+                }
+            }
+            renderTerminalRigStage(false);
+            refreshLiveUI();
+        }, 250);
+
+        function openModal(id) {
+            const m = document.getElementById(id);
+            if (m) {
+                m.classList.remove('hidden');
+                m.classList.add('flex');
+            }
+            if (id === 'admin-modal') renderAdminModalContent();
+        }
+
+        function closeModal(id) {
+            const m = document.getElementById(id);
+            if (m) {
+                m.classList.add('hidden');
+                m.classList.remove('flex');
+            }
+        }
+
+        function switchTab(tab) {
+            ['terminal', 'fleet', 'rewards', 'partners'].forEach(t => {
+                const view = document.getElementById('view-' + t);
+                const btn = document.getElementById('tab-' + t);
+                if (view) view.classList.add('hidden');
+                if (btn) {
+                    btn.className = 'py-2.5 px-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 text-slate-400 hover:text-white transition-all relative';
+                }
+            });
+
+            const activeView = document.getElementById('view-' + tab);
+            const activeBtn = document.getElementById('tab-' + tab);
+            if (activeView) activeView.classList.remove('hidden');
+            if (activeBtn) {
+                activeBtn.className = 'py-2.5 px-2 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 gold-btn transition-all relative';
+            }
+
+            if (tab === 'fleet') renderFleetCards();
+            if (tab === 'rewards') {
+                renderDailyRewardsSection();
+                renderAllTasks();
+            }
+            if (tab === 'partners') {
+                renderReferralsBlock();
+                updateWithdrawalBlock();
+            }
+        }
+
+        function showToast(msg, type) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const el = document.createElement('div');
+            const style = type === 'warning'
+                ? 'border-amber-400/50 bg-amber-950/95'
+                : 'border-emerald-400/50 bg-[#09111C]/95';
+            el.className = 'pointer-events-auto p-3.5 rounded-2xl border ' + style + ' backdrop-blur-xl shadow-2xl text-xs sm:text-sm text-white flex items-center gap-2.5 transition-all duration-300';
+            el.innerHTML = '<span class="' + (type === 'warning' ? 'text-amber-300' : 'text-emerald-400') + ' font-black">' + (type === 'warning' ? '!' : '✓') + '</span><span>' + msg + '</span>';
+            container.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 300);
+            }, 3500);
+        }
+
+        function updateRewardsDot() {
+            const dot = document.getElementById('rewards-dot');
+            if (!dot) return;
+            const activeCount = state.tasks.filter(t => t.active).length;
+            const hasPending = !state.dailyClaimedToday || state.completedTasks12h.length < activeCount;
+            if (hasPending) dot.classList.remove('hidden');
+            else dot.classList.add('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const trigger = e.target.closest('[data-action]');
+            if (!trigger) return;
+
+            const action = trigger.getAttribute('data-action');
+            if (action === 'switch-tab') {
+                switchTab(trigger.getAttribute('data-tab'));
+            } else if (action === 'select-coin') {
+                state.activeCoin = trigger.getAttribute('data-coin');
+                renderTopCoinSelector();
+                refreshLiveUI();
+                saveState();
+            } else if (action === 'toggle-mining') {
+                if (!state.isMining && state.batteryPercent <= 0) {
+                    state.batteryPercent = 100;
+                    state.isMining = true;
+                } else {
+                    state.isMining = !state.isMining;
+                }
+                saveState();
+                renderPowerCells6Grid();
+                renderTerminalRigStage(true);
+                refreshLiveUI();
+                showToast(state.isMining ? 'Майнинг запущен!' : 'Майнинг остановлен.');
+            } else if (action === 'recharge-battery') {
+                const amt = Number(trigger.getAttribute('data-amount')) || 5;
+                state.batteryPercent = Math.min(100, state.batteryPercent + amt);
+                if (state.batteryPercent > 0 && !state.isMining) state.isMining = true;
+                saveState();
+                renderPowerCells6Grid();
+                renderTerminalRigStage(true);
+                refreshLiveUI();
+                showToast('Батареи заряжены до ' + state.batteryPercent + '%!');
+            } else if (action === 'buy-rig') {
+                const rigId = trigger.getAttribute('data-rig');
+                const rig = ASIC_FLEET.find(r => r.id === rigId);
+                if (!rig) return;
+                if (state.shopUSD < rig.priceUSD) {
+                    showToast('Недостаточно SHOP USD (нужно $' + rig.priceUSD + '). Пополните счёт или нажмите «+$100 SHOP».', 'warning');
+                    return;
+                }
+                state.shopUSD = Number((state.shopUSD - rig.priceUSD).toFixed(2));
+                if (!state.ownedRigIds.includes(rig.id)) state.ownedRigIds.push(rig.id);
+                state.equippedRigId = rig.id;
+                saveState();
+                renderFleetCards();
+                renderTerminalRigStage(true);
+                refreshLiveUI();
+                showToast('Куплен и запущен ' + rig.name + ' за $' + rig.priceUSD + ' SHOP USD!');
+            } else if (action === 'equip-rig') {
+                state.equippedRigId = trigger.getAttribute('data-rig');
+                saveState();
+                renderFleetCards();
+                renderTerminalRigStage(true);
+                refreshLiveUI();
+                showToast('ASIC установлен в терминал!');
+            } else if (action === 'claim-daily-gift') {
+                if (state.dailyClaimedToday) {
+                    showToast('Подарок за сегодня уже получен! Нажмите «🎁 След. день стрика» для теста.', 'warning');
+                    return;
+                }
+                const curDay = Math.max(1, Math.min(7, Number(state.dailyStreakDay) || 1));
+                const rewardObj = DAILY_STREAK_REWARDS.find(r => r.day === curDay) || DAILY_STREAK_REWARDS[0];
+                state.minedBalances.BTC = (state.minedBalances.BTC || 0) + rewardObj.btc;
+                state.dailyClaimedToday = true;
+
+                const wrap = document.getElementById('daily-gift-svg-wrap');
+                if (wrap) {
+                    wrap.classList.remove('gift-pop-anim');
+                    void wrap.offsetWidth;
+                    wrap.classList.add('gift-pop-anim');
+                }
+                saveState();
+                renderDailyRewardsSection();
+                refreshLiveUI();
+                updateRewardsDot();
+                showToast('День ' + curDay + ': начислено +' + rewardObj.btc.toFixed(7) + ' BTC!');
+            } else if (action === 'open-task-modal') {
+                const taskId = trigger.getAttribute('data-task');
+                const task = state.tasks.find(t => t.id === taskId);
+                if (!task || state.completedTasks12h.includes(taskId)) return;
+                const body = document.getElementById('task-modal-content');
+                if (body) {
+                    body.innerHTML =
+                        '<div class="text-xs font-mono text-amber-300 uppercase">' + task.platform + ' • Задание 12ч</div>' +
+                        '<h3 class="text-xl font-black text-white mt-1">' + task.title + '</h3>' +
+                        '<p class="text-xs text-slate-400 mt-1.5 leading-relaxed">' + task.desc + '</p>' +
+                        '<div class="mt-4 p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3">' +
+                            '<a href="' + task.url + '" target="_blank" rel="noopener noreferrer" class="w-full py-3 px-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">1. Открыть ' + task.platform + ' ↗</a>' +
+                            '<button type="button" data-action="complete-task" data-task="' + task.id + '" class="w-full py-3.5 px-4 rounded-xl gold-btn font-black text-xs sm:text-sm transition">2. Подтвердить (+' + task.boostPct + '% на ' + task.durationHours + 'ч)</button>' +
+                        '</div>';
+                }
+                openModal('task-verify-modal');
+            } else if (action === 'complete-task') {
+                const taskId = trigger.getAttribute('data-task');
+                const task = state.tasks.find(t => t.id === taskId);
+                if (!task || state.completedTasks12h.includes(taskId)) return;
+                state.completedTasks12h.push(taskId);
+                applyBoost(task.boostPct, task.durationHours);
+                closeModal('task-verify-modal');
+                saveState();
+                renderAllTasks();
+                renderTerminalRigStage(true);
+                refreshLiveUI();
+                updateRewardsDot();
+                showToast('Буст +' + task.boostPct + '% на ' + task.durationHours + 'ч активирован!');
+            } else if (action === 'copy-ref-link') {
+                const inp = document.getElementById('ref-link-input');
+                if (inp) {
+                    inp.select();
+                    inp.setSelectionRange(0, 99999);
+                    try {
+                        document.execCommand('copy');
+                        showToast('Реферальная ссылка скопирована!');
+                    } catch (err) {
+                        showToast('Скопируйте ссылку вручную.', 'warning');
+                    }
+                }
+            } else if (action === 'open-topup-modal') {
+                openModal('topup-modal');
+            } else if (action === 'open-withdraw-modal') {
+                const sumEl = document.getElementById('modal-withdraw-summary');
+                if (sumEl) sumEl.textContent = (state.minedBalances.BTC || 0).toFixed(8) + ' BTC';
+                openModal('withdraw-modal');
+            } else if (action === 'open-admin-modal') {
+                openModal('admin-modal');
+            } else if (action === 'close-modal') {
+                closeModal(trigger.getAttribute('data-target'));
+            } else if (action === 'admin-toggle-task') {
+                const id = trigger.getAttribute('data-task');
+                const t = state.tasks.find(x => x.id === id);
+                if (t) {
+                    t.active = !t.active;
+                    saveState();
+                    renderAdminModalContent();
+                    renderAllTasks();
+                    updateRewardsDot();
+                }
+            } else if (action === 'admin-delete-task') {
+                const id = trigger.getAttribute('data-task');
+                state.tasks = state.tasks.filter(x => x.id !== id);
+                saveState();
+                renderAdminModalContent();
+                renderAllTasks();
+                updateRewardsDot();
+                showToast('Задание удалено.');
+            } else if (action === 'admin-reset-12h') {
+                state.completedTasks12h = [];
+                state.tasks12hResetTime = Date.now() + TWELVE_HOURS_MS;
+                saveState();
+                renderAllTasks();
+                updateRewardsDot();
+                showToast('12-часовой кулдаун заданий сброшен.');
+            } else if (action === 'admin-approve-topup') {
+                const id = trigger.getAttribute('data-id');
+                const req = state.topupRequests.find(x => x.id === id);
+                if (req && req.status === 'Ожидает') {
+                    req.status = 'Зачислено';
+                    state.shopUSD = Number((state.shopUSD + req.amount).toFixed(2));
+                    saveState();
+                    renderAdminModalContent();
+                    renderFleetCards();
+                    refreshLiveUI();
+                    showToast('Зачислено +$' + req.amount.toFixed(2) + ' SHOP USD!');
+                }
+            } else if (action === 'admin-approve-withdraw') {
+                const id = trigger.getAttribute('data-id');
+                const w = state.withdrawRequests.find(x => x.id === id);
+                if (w && w.status === 'Ожидает проверки') {
+                    w.status = 'Одобрено';
+                    saveState();
+                    renderAdminModalContent();
+                    updateWithdrawalBlock();
+                    showToast('Заявка на вывод ' + w.amountBTC.toFixed(8) + ' BTC отмечена как одобренная.');
+                }
+            } else if (action === 'demo-topup-shop') {
+                state.shopUSD = Number((state.shopUSD + 100).toFixed(2));
+                saveState();
+                renderFleetCards();
+                refreshLiveUI();
+                showToast('Добавлено +$100.00 SHOP USD для теста покупок ASIC.');
+            } else if (action === 'demo-add-btc') {
+                state.minedBalances.BTC = (state.minedBalances.BTC || 0) + 0.0020;
+                saveState();
+                refreshLiveUI();
+                showToast('Добавлено +0.00200000 BTC в баланс майнинга.');
+            } else if (action === 'demo-invite-friend') {
+                const presets = [
+                    { name: 'Artem_TG', rigName: 'Pulse Rack', hashrate: 190 },
+                    { name: 'Elena_BTC', rigName: 'Forge Vault', hashrate: 1250 },
+                    { name: 'Max_Node', rigName: 'Pulse Rack', hashrate: 190 }
+                ];
+                const pick = presets[state.referrals.length % presets.length];
+                state.referrals.push({
+                    name: pick.name + ' #' + (state.referrals.length + 1),
+                    rigName: pick.rigName,
+                    hashrate: pick.hashrate,
+                    active: true
+                });
+                saveState();
+                renderReferralsBlock();
+                renderTerminalRigStage(true);
+                refreshLiveUI();
+                showToast('Добавлен активный друг ' + pick.name + ' (+10% бонус).');
+            } else if (action === 'demo-next-streak') {
+                const cur = Math.max(1, Math.min(7, Number(state.dailyStreakDay) || 1));
+                state.dailyStreakDay = cur >= 7 ? 1 : cur + 1;
+                state.dailyClaimedToday = false;
+                saveState();
+                renderDailyRewardsSection();
+                updateRewardsDot();
+                switchTab('rewards');
+                showToast('Переключено на День ' + state.dailyStreakDay + ' из 7.');
+            } else if (action === 'reset-demo') {
+                localStorage.removeItem(STORAGE_KEY);
+                state = JSON.parse(JSON.stringify(defaultState));
+                renderTopCoinSelector();
+                renderPowerCells6Grid();
+                renderTerminalRigStage(true);
+                renderFleetCards();
+                renderDailyRewardsSection();
+                renderAllTasks();
+                renderReferralsBlock();
+                updateRewardsDot();
+                refreshLiveUI();
+                showToast('Состояние фермы сброшено к стартовым настройкам.');
+            }
+        });
+
+        // Форма добавления задания в кабинете админа
+        const addTaskForm = document.getElementById('admin-add-task-form');
+        if (addTaskForm) {
+            addTaskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const platform = document.getElementById('new-task-platform').value;
+                const [pctStr, hrsStr] = document.getElementById('new-task-boost').value.split('|');
+                const title = document.getElementById('new-task-title').value.trim();
+                const url = document.getElementById('new-task-url').value.trim();
+                const desc = document.getElementById('new-task-desc').value.trim() || ('Перейдите в ' + platform + ' и выполните действие для активации буста.');
+                if (!title || !url) return;
+
+                state.tasks.unshift({
+                    id: 'task_' + Date.now(),
+                    platform,
+                    title,
+                    desc,
+                    url,
+                    boostPct: Number(pctStr) || 10,
+                    durationHours: Number(hrsStr) || 2,
+                    active: true
+                });
+                saveState();
+                addTaskForm.reset();
+                renderAdminModalContent();
+                renderAllTasks();
+                updateRewardsDot();
+                showToast('Новое задание (' + platform + ') добавлено!');
+            });
+        }
+
+        // Форма заявки на пополнение SHOP USD
+        const topupForm = document.getElementById('topup-form');
+        if (topupForm) {
+            topupForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const amt = Number(document.getElementById('topup-amount-select').value) || 10;
+                const tx = document.getElementById('topup-tx-input').value.trim();
+                state.topupRequests.unshift({
+                    id: 'top_' + Date.now(),
+                    amount: amt,
+                    tx: tx || 'Внешний перевод',
+                    status: 'Ожидает'
+                });
+                saveState();
+                closeModal('topup-modal');
+                topupForm.reset();
+                showToast('Заявка на пополнение $' + amt.toFixed(2) + ' создана. Подтвердите её в Кабинете админа.');
+            });
+        }
+
+        // Форма заявки на вывод
+        const withdrawForm = document.getElementById('withdraw-form');
+        if (withdrawForm) {
+            withdrawForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const rig = getEquippedRig();
+                const thresholdBTC = getRequiredThresholdBTCForRig(rig);
+                const activeRefsCount = getActiveReferrals().length;
+                const btcBal = state.minedBalances.BTC || 0;
+
+                if (rig.tier < 2 || activeRefsCount < 3 || !thresholdBTC || btcBal < thresholdBTC) {
+                    showToast('Условия вывода не выполнены!', 'warning');
+                    return;
+                }
+
+                const network = document.getElementById('withdraw-network-select').value;
+                const wallet = document.getElementById('withdraw-wallet-input').value.trim();
+                state.withdrawRequests.unshift({
+                    id: 'wd_' + Date.now(),
+                    amountBTC: btcBal,
+                    network,
+                    wallet,
+                    status: 'Ожидает проверки'
+                });
+                state.minedBalances.BTC = 0;
+                saveState();
+                closeModal('withdraw-modal');
+                withdrawForm.reset();
+                refreshLiveUI();
+                showToast('Заявка на вывод создана и отправлена в очередь проверки.');
+            });
+        }
+
+        // Стартовая инициализация
+        renderTopCoinSelector();
+        renderPowerCells6Grid();
+        renderTerminalRigStage(true);
+        renderFleetCards();
+        renderDailyRewardsSection();
+        renderAllTasks();
+        renderReferralsBlock();
+        updateRewardsDot();
+        refreshLiveUI();
+    </script>
+</body>
+</html>
+```
